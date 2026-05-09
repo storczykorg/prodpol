@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+import commitInfo from "virtual:commitInfo";
+
 </script>
 
 <template>
@@ -139,6 +141,16 @@
         <div class="stat-desc">↘︎ 90 (14%)</div>
       </div>
     </div>
+  <div>
+    <div class="p-4 rounded-md shadow w-full">
+      <h2 class="font-semibold">Wersja frontendu</h2>
+      <div class="p-4">
+        <code class="whitespace-pre text-sm">
+          {{ String(commitInfo) }}
+        </code>
+      </div>
+    </div>
+  </div>
 </article>
 </template>
 
