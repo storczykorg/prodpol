@@ -1,7 +1,10 @@
-@layer base, theme, components, utilities;
-
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {
     themes: light --default, dark --prefersdark;
+}
+
+body {
+    width: 100vw;
+    overflow-x: hidden;
 }

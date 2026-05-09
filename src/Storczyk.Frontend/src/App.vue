@@ -13,16 +13,14 @@ const layout = layoutStrategy(router)
 <template>
   <RouterView v-slot="{ Component }">
     <component :is="layout" v-if="Component">
-      <Transition mode="out-in">
-        <KeepAlive>
-          <Suspense>
-            <component :is="Component"></component>
-            <template #fallback>
-              Loading...
-            </template>
-          </Suspense>
-        </KeepAlive>
-      </Transition>
+      <KeepAlive>
+        <Suspense>
+          <component :is="Component"></component>
+          <template #fallback>
+            Loading...
+          </template>
+        </Suspense>
+      </KeepAlive>
     </component>
     <component :is="layout" v-else/>
   </RouterView>
