@@ -1,0 +1,13 @@
+message:
+  resource_not_found: "The resource you're looking for is not here"
+  login: "Log in"
+  footer_text: "Website made by Orchidea Barbara Zych"
+
+action:
+  login: "Log in"
+  take_me: "Take me to "
+site:
+  homepage: "Homepage"
+  about: "About us"
+  licences: "Licences"
+  cart: "Cart"

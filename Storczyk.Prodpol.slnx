@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/lib/">
+    <Project Path="lib/Storczyk.Prodpol.Core/Storczyk.Prodpol.Core.fsproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Storczyk.Prodpol/Storczyk.Prodpol.fsproj" />
+    <Project Path="src/Storczyk.Worker/Storczyk.Worker.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Storczyk.Prodpol.Tests/Storczyk.Prodpol.Tests.fsproj" />
+  </Folder>
+</Solution>

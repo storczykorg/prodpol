@@ -1,0 +1,7 @@
+{
+  "name": "prodpol-workspace",
+  "private": true,
+  "workspaces": [
+    "./src/Storczyk.Frontend"
+  ]
+}
