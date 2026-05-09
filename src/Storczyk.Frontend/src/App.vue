@@ -1,38 +1,29 @@
 <script lang="ts" setup>
+import "./style.css";
 
-import { useI18n } from 'vue-i18n'
-import NavCollapsable from "./components/NavCollapsable.vue";
-import {BadgeInfoIcon, HomeIcon} from "@lucide/vue";
-const { t } = useI18n()
+import { useRouter} from "vue-router"
+import {layoutStrategy} from "./layouts";
 
-const menuItems = [
-  {
-    icon: HomeIcon,
-    href: "/",
-    name: "site.homepage"
-  },
-  {
-    icon: BadgeInfoIcon,
-    href: "/about",
-    name: "site.about"
-  }
-];
+const router = useRouter()
+
+const layout = layoutStrategy(router)
 
 </script>
 
 <template>
-  <nav class="nav-collapsable-anchor">
-    <ul>
-      <li>
-        <router-link to="/"> {{ t("site.homepage") }} </router-link>
-      </li>
-    </ul>
-    <NavCollapsable v-bind:menuItems="menuItems"/>
-  </nav>
-  <main>
-    <RouterView/>
-  </main>
-  <footer>
-    {{ t("message.footer_text") }}
-  </footer>
+  <RouterView v-slot="{ Component }">
+    <component :is="layout" v-if="Component">
+      <Transition mode="out-in">
+        <KeepAlive>
+          <Suspense>
+            <component :is="Component"></component>
+            <template #fallback>
+              Loading...
+            </template>
+          </Suspense>
+        </KeepAlive>
+      </Transition>
+    </component>
+    <component :is="layout" v-else/>
+  </RouterView>
 </template>

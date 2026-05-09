@@ -4,7 +4,7 @@
 
 <template>
 
-<div>
+<div class="prose">
   <h1>About us</h1>
 </div>
 

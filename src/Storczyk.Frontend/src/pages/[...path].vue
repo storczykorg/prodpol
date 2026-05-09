@@ -5,14 +5,14 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div>
+  <article class="prose">
   <h1> {{ t( "message.resource_not_found" ) }} </h1><br/>
   <h2> {{ t( "action.take_me" ) }}
     <router-link to="/">
     {{ t( "site.homepage" ) }}
     </router-link>
   </h2>
-  </div>
+  </article>
 </template>
 
 <style scoped>

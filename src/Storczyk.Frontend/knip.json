@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "tags": [
+    "-lintignore"
+  ],
+  "entry": [
+    "src/App.vue",
+    "src/pages/**/*.vue",
+    "src/main.{js,ts}"
+  ],
+  "ignore": [
+    "**/*.d.ts"
+  ],
+  "tailwind": {
+    "entry": [ "src/style.css" ]
+  }
+}
