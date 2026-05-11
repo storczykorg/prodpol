@@ -1,7 +1,9 @@
 <script setup lang="ts">
 
 import commitInfo from "virtual:commitInfo";
+import {useServerPing} from "../../data/server/status.ts";
 
+const { data, isLoading, error } = useServerPing();
 </script>
 
 <template>
@@ -13,11 +15,27 @@ import commitInfo from "virtual:commitInfo";
     <div class="card-body">
     <h2 class="card-title">Status serwera</h2>
     <div class="p-4">
-      <div class="inline-grid *:[grid-area:1/1]">
-        <div class="status status-lg status-error animate-ping"></div>
-        <div class="status status-lg status-error"></div>
-      </div>
-      Server is down
+      <template v-if="isLoading">
+        <div class="inline-grid *:[grid-area:1/1]">
+          <div class="status status-lg status-error animate-ping"></div>
+          <div class="status status-lg status-error"></div>
+        </div>
+        Checking status
+      </template>
+      <template v-else-if="error">
+        <div class="inline-grid *:[grid-area:1/1]">
+          <div class="status status-lg status-error animate-ping"></div>
+          <div class="status status-lg status-error"></div>
+        </div>
+        Server is down
+      </template>
+      <template v-else-if="data">
+        <div class="inline-grid *:[grid-area:1/1]">
+          <div class="status status-lg animate-ping"></div>
+          <div class="status status-lg"></div>
+        </div>
+        Server is up
+      </template>
     </div>
     </div>
   </div>
