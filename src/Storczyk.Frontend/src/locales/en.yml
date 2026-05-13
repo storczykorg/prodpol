@@ -11,3 +11,8 @@ site:
   about: "About us"
   licences: "Licences"
   cart: "Cart"
+
+admin:
+  link: "Admin Panel"
+  employees:
+    link: "Employees"

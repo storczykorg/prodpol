@@ -4,6 +4,7 @@ import commitInfo from "virtual:commitInfo";
 import {useServerPing} from "../../data/server/status.ts";
 
 const { data, isLoading, error } = useServerPing();
+
 </script>
 
 <template>

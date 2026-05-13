@@ -19,7 +19,8 @@
     "@vueuse/router": "^14.3.0",
     "tailwindcss": "^4.3.0",
     "vue": "^3.5.32",
-    "vue-i18n": "^11.3.2"
+    "vue-i18n": "^11.3.2",
+    "vue3-simple-icons": "^16.10.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

@@ -1,3 +1,9 @@
 message:
   login: "Zaloguj się"
   footer_text: "Strona wykonana przez Orchidea Barbara Zych"
+
+
+admin:
+  link: "Admin Panel"
+  employees:
+    link: "Pracownicy"
