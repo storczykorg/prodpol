@@ -1,0 +1,3 @@
+[submodule "src/Storczyk.Frontend"]
+	path = src/Storczyk.Frontend
+	url = git@github.com:storczykorg/prodpol-frontend.git
