@@ -15,5 +15,5 @@ type Worker(logger: ILogger<Worker>) =
         task {
             while not ct.IsCancellationRequested do
                 logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now)
-                do! Task.Delay(1000)
+                do! Task.Delay(60_000)
         }

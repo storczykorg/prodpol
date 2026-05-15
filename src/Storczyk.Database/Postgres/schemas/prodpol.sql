@@ -1,0 +1,2 @@
+﻿CREATE SCHEMA IF NOT EXISTS "prodpol";
+CREATE SCHEMA IF NOT EXISTS "prodpol_meta";

@@ -10,10 +10,16 @@
     <Compile Include="Controllers\StatusController.fs" />
     <Compile Include="Models\Employee.fs" />
     <Compile Include="Program.fs" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\lib\Storczyk.Prodpol.Core\Storczyk.Prodpol.Core.fsproj" />
+    <ProjectReference Include="..\Storczyk.Database\Storczyk.Database.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql" Version="13.3.2" />
   </ItemGroup>
 
 </Project>

@@ -13,6 +13,8 @@ open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
+open Npgsql
+open Storczyk.Database.Services
 
 module Program =
     let exitCode = 0
@@ -21,14 +23,29 @@ module Program =
     let main args =
 
         let builder = WebApplication.CreateBuilder(args)
+        
+        builder.AddPostgresUpgrader()
 
-        builder.Services.AddControllers()
+        let services = builder.Services
+            
+        services.AddControllers()
+        
+        builder.AddNpgsqlDataSource("postgresdb")
 
         let app = builder.Build()
+        
+        use scope = app.Services.CreateScope()
+        let upgrader = app.Services.GetRequiredService<PostgresUpgrader>()
+        
+        let result = upgrader.Build().PerformUpgrade()
+        
+        if not result.Successful then
+            app.Logger.LogCritical("Can't apply migration: ", result.Error)
+            1
+        else
+            app.UseAuthorization()
+            app.MapControllers()
 
-        app.UseAuthorization()
-        app.MapControllers()
+            app.Run()
 
-        app.Run()
-
-        exitCode
+            exitCode

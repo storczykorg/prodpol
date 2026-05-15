@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Storczyk.AppHost/Storczyk.AppHost.csproj" />
+    <Project Path="src/Storczyk.Database/Storczyk.Database.csproj" />
     <Project Path="src/Storczyk.Prodpol/Storczyk.Prodpol.fsproj" />
     <Project Path="src/Storczyk.Worker/Storczyk.Worker.fsproj" />
   </Folder>

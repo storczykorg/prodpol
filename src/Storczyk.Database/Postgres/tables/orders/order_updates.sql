@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS prodpol.order_updates
+(
+    update_id   bigserial                   NOT NULL,
+    order_id    bigint                      NOT NULL,
+    created_at  timestamp without time zone NOT NULL DEFAULT now(),
+    employee_id bigint                      NOT NULL,
+    state       integer                     NOT NULL,
+    PRIMARY KEY (update_id)
+);
+
