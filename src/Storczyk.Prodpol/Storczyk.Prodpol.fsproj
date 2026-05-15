@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\lib\Storczyk.Prodpol.Core\Storczyk.Prodpol.Core.fsproj" />
-    <ProjectReference Include="..\Storczyk.Database\Storczyk.Database.csproj" />
+    <ProjectReference Include="..\..\lib\Storczyk.Database\Storczyk.Database.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,10 +1,10 @@
 <Solution>
   <Folder Name="/lib/">
     <Project Path="lib/Storczyk.Prodpol.Core/Storczyk.Prodpol.Core.fsproj" />
+    <Project Path="lib/Storczyk.Database/Storczyk.Database.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Storczyk.AppHost/Storczyk.AppHost.csproj" />
-    <Project Path="src/Storczyk.Database/Storczyk.Database.csproj" />
     <Project Path="src/Storczyk.Prodpol/Storczyk.Prodpol.fsproj" />
     <Project Path="src/Storczyk.Worker/Storczyk.Worker.fsproj" />
   </Folder>

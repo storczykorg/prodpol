@@ -7,6 +7,14 @@
 
   <ItemGroup>
     <Compile Include="Library.fs" />
+    <Folder Include="Services\" />
+    <Compile Include="Data\IRepository.fs" />
+    <Compile Include="Models\Employee.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Control.AsyncSeq" Version="4.15.0" />
+    <PackageReference Include="Microsoft.FSharpLu" Version="0.11.7" />
   </ItemGroup>
 
 </Project>
