@@ -6,7 +6,7 @@ open Microsoft.AspNetCore.Mvc
 [<Route("api/[controller]/[action]")>]
 type StatusController() =
     inherit ControllerBase()
-    
+    [<HttpGet>]
     member _.Ping() =
         "Pong"
     [<HttpGet>]

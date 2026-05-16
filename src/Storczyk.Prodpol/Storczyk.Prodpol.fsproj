@@ -5,12 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Utils\Async.fs" />
+    <Compile Include="Utils\LoggedController.fs" />
     <Compile Include="WeatherForecast.fs" />
+    <Folder Include="Services\" />
+    <Compile Include="Data\Forms\EmployeeCreate.fs" />
     <Compile Include="Controllers/WeatherForecastController.fs" />
     <Compile Include="Controllers\StatusController.fs" />
-    <Compile Include="Models\Employee.fs" />
+    <Compile Include="Controllers\Data\EmployeesController.fs" />
+    <Compile Include="Controllers\Data\EmployeeRolesController.fs" />
+    <Compile Include="Controllers\Data\EmployeePhotosController.fs" />
     <Compile Include="Program.fs" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +25,8 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql" Version="13.3.2" />
+    <PackageReference Update="FSharp.Core" Version="10.1.300" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch.SystemTextJson" Version="10.0.8" />
   </ItemGroup>
 
 </Project>

@@ -18,7 +18,9 @@ var backendService = builder
     .AddProject<Projects.StorczykProdpol>("StorczykProdpol")
     .WithReference(db, "postgresdb")
     .WaitFor(db)
-    .WithHttpHealthCheck("api/status/health");
+    .WithHttpHealthCheck("api/status/health")
+    .WithHttpEndpoint(2138)
+    .WithHttpsEndpoint(2139);
 var frontend = builder.AddViteApp("StorczykFrontend",
         "../Storczyk.Frontend")
     .WithReference(backendService)

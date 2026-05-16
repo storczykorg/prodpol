@@ -7,7 +7,6 @@ using DbUp.Engine.Sorters;
 using DbUp.Engine.Transactions;
 using DbUp.Postgresql;
 using DbUp.Support;
-using Npgsql;
 
 namespace Storczyk.Database.Services;
 
@@ -16,7 +15,7 @@ public class PostgresUpgrader(
     ILogger<PostgresUpgrader> logger
 )
 {
-    public UpgradeEngine Build()
+    public virtual UpgradeEngine Build()
     {
         var builder = PostgresqlExtensions.PostgresqlDatabase(manager, "prodpol");
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly, 
@@ -64,21 +63,5 @@ public class PostgresUpgrader(
         ));
 
         return builder.Build();
-    }
-}
-public static class PostgresUpgraderExtensions
-{
-    public static IHostApplicationBuilder AddPostgresUpgrader(this IHostApplicationBuilder builder)
-    {
-        builder.Services.AddTransient<PostgresqlConnectionManager>(
-            services => new PostgresqlConnectionManager(services.GetRequiredService<NpgsqlDataSource>())
-            );
-        builder.Services.AddTransient<PostgresUpgrader>(
-            services => new PostgresUpgrader(
-                services.GetRequiredService<PostgresqlConnectionManager>(),
-                services.GetRequiredService<ILogger<PostgresUpgrader>>())
-            );
-        
-        return builder;
     }
 }
