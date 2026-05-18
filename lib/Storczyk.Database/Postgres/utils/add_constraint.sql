@@ -1,3 +1,9 @@
+/*
+ * Copyright 2026 storczyk.org. All rights reserved.
+ * This work is licensed under the terms of the MIT license.  
+ * For a copy, see <https://opensource.org/licenses/MIT>.
+ */
+
 -- Skrypt pozwalający dodać ograniczenie do bazy danych oraz opcjonalnie je nadpisać
 -- Source - https://stackoverflow.com/a/67799215
 -- Posted by Pedro Ballesteros

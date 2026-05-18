@@ -1,3 +1,9 @@
+/*
+ * Copyright 2026 storczyk.org. All rights reserved.
+ * This work is licensed under the terms of the MIT license.  
+ * For a copy, see <https://opensource.org/licenses/MIT>.
+ */
+
 CALL add_constraint('prodpol.order_products',
                     'FK_order_products_orders',
                     'FOREIGN KEY (order_id) ' ||
