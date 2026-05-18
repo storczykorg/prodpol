@@ -1,36 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <OutputType>Library</OutputType>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <OutputType>Library</OutputType>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="FSharp.Control.AsyncSeq" Version="4.15.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-preview.4.25258.110" />
-        <PackageReference Include="dbup-postgresql" Version="7.0.1" />
-        <PackageReference Include="Microsoft.FSharpLu" Version="0.11.7" />
-        <PackageReference Include="Npgsql" Version="10.0.2" />
+    <ItemGroup>
+        <PackageReference Include="FSharp.Control.AsyncSeq" Version="4.15.0"/>
+        <PackageReference Include="FSharp.Core" Version="10.1.300" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+        <PackageReference Include="dbup-postgresql" Version="7.0.1"/>
+        <PackageReference Include="Microsoft.FSharpLu" Version="0.11.7"/>
+        <PackageReference Include="Npgsql" Version="10.0.2"/>
     </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\lib\Storczyk.Prodpol.Core\Storczyk.Prodpol.Core.fsproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\lib\Storczyk.Prodpol.Core\Storczyk.Prodpol.Core.fsproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Postgres\**\*.sql" />
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Postgres\**\*.sql"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Postgres\indices\" />
-    <Folder Include="Postgres\procedures\" />
-  </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Postgres\indices\"/>
+        <Folder Include="Postgres\procedures\"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Remove="C:\Users\goste\.nuget\packages\microsoft.fsharplu\0.11.7\contentFiles\any\netstandard2.0\Sysprep.ps1" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Remove="C:\Users\goste\.nuget\packages\microsoft.fsharplu\0.11.7\contentFiles\any\netstandard2.0\Sysprep.ps1"/>
+    </ItemGroup>
 
 
 </Project>

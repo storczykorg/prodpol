@@ -12,6 +12,7 @@ public static class PostgresRepositoriesExtensions
 
         return services;
     }
+
     public static IServiceCollection AddNullRepositories(this IServiceCollection services)
     {
         services.AddTransient<IEmployeesRepository, NullEmployeeRepository>();

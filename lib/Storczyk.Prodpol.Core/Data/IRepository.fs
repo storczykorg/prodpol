@@ -1,24 +1,8 @@
 ﻿namespace Storczyk.Prodpol.Core.Data
 
-open System
-open System.Data
 open System.Threading
 open FSharp.Control
 open Storczyk.Prodpol.Core.Models
-
-type ValidationErrorDetail = {
-    Field: string
-    Issue: string
-}
-
-type DatabaseError =
-    | NotFound
-    | ValidationErrors of ValidationErrorDetail seq // Accumulates multiple validation issues
-    | BulkOperationErrors of DatabaseError seq // (Index of row * Error that happened)
-    | ConcurrencyViolation
-    | ConnectionTimeout
-    | DatabaseException of DataException
-    | UnknownException of Exception
 
 type IRepository<'TKey, 'TValue> =
     interface
@@ -31,10 +15,9 @@ type IRepository<'TKey, 'TValue> =
 
 type IEmployeesRepository =
     inherit IRepository<int64, Employee>
-    
+
 type IDictionaryRepository<'T> =
     inherit IRepository<string, 'T>
 
 type IEmployeeRoleRepository =
     inherit IDictionaryRepository<EmployeeRole>
-    

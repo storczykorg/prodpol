@@ -1,8 +1,8 @@
 CALL add_constraint('prodpol.product_amount_updates',
-     'FK_product_amount_updates_products',
-     'FOREIGN KEY (product_id) ' ||
-     'REFERENCES prodpol.products',
-     TRUE);
+                    'FK_product_amount_updates_products',
+                    'FOREIGN KEY (product_id) ' ||
+                    'REFERENCES prodpol.products',
+                    TRUE);
 CALL add_constraint('prodpol.product_amount_updates',
                     'FK_product_amount_updates_employees',
                     'FOREIGN KEY (created_by) ' ||

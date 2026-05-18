@@ -1,23 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="Models\Employee.fs" />
-    <Compile Include="Models\EmployeeRole.fs" />
-    <Compile Include="Data\IRepository.fs" />
-    <Compile Include="Services\PgEmployeeRepository.fs" />
-    <Compile Include="Services\NullEmployeeRepository.fs" />
-    <Compile Include="Services\SnowflakeGenerator.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Models\Employee.fs"/>
+        <Compile Include="Models\EmployeeRole.fs"/>
+        <Compile Include="Data\DatabaseError.fs"/>
+        <Compile Include="Data\IRepository.fs"/>
+        <Compile Include="Utils\Task.fs"/>
+        <Compile Include="Services\PgEmployeeRepository.fs"/>
+        <Compile Include="Services\NullEmployeeRepository.fs"/>
+        <Compile Include="Services\SnowflakeGenerator.fs"/>
+        <Compile Include="Services\PgEmployeeRoleRepository.fs"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="FSharp.Control.AsyncSeq" Version="4.15.0" />
-    <PackageReference Include="linq2db" Version="6.2.1" />
-    <PackageReference Include="Microsoft.FSharpLu" Version="0.11.7" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Dapper" Version="2.1.79" />
+        <PackageReference Include="FSharp.Control.AsyncSeq" Version="4.15.0"/>
+        <PackageReference Include="FSharp.Control.FusionTasks" Version="2.6.0"/>
+        <PackageReference Include="linq2db" Version="6.3.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
+        <PackageReference Include="Npgsql" Version="10.0.2"/>
+        <PackageReference Update="FSharp.Core" Version="10.1.300" />
+    </ItemGroup>
 
 </Project>

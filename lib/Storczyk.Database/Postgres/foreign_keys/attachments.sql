@@ -1,7 +1,7 @@
 CALL add_constraint('prodpol.attachments',
-     'FK_attachments_uploaded_by_employees',
-     'FOREIGN KEY (uploaded_by) ' ||
-     'REFERENCES prodpol.employees (employee_id)', TRUE);
+                    'FK_attachments_uploaded_by_employees',
+                    'FOREIGN KEY (uploaded_by) ' ||
+                    'REFERENCES prodpol.employees (employee_id)', TRUE);
 CALL add_constraint('prodpol.attachments',
                     'FK_attachments_modified_by_employees',
                     'FOREIGN KEY (modified_by) ' ||

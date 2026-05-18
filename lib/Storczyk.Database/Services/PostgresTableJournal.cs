@@ -7,7 +7,8 @@ namespace Storczyk.Database.Services;
 
 internal class ProdpolTableJournal : TableJournal
 {
-    internal ProdpolTableJournal(Func<IConnectionManager> connectionManager, Func<IUpgradeLog> logger, string schema, string tableName)
+    internal ProdpolTableJournal(Func<IConnectionManager> connectionManager, Func<IUpgradeLog> logger, string schema,
+        string tableName)
         : base(connectionManager, logger, new PostgresqlObjectParser(), schema, tableName)
     {
     }
@@ -16,21 +17,21 @@ internal class ProdpolTableJournal : TableJournal
     protected override string GetInsertJournalEntrySql(string scriptName, string applied)
     {
         return $"""
-                insert into {base.FqSchemaTableName} (scriptname, applied) 
+                insert into {FqSchemaTableName} (scriptname, applied) 
                 values ({scriptName}, {applied})
                 """;
     }
 
     protected override string GetJournalEntriesSql()
     {
-        return $"select ScriptName from {base.FqSchemaTableName} order by ScriptName";
+        return $"select ScriptName from {FqSchemaTableName} order by ScriptName";
     }
 
     protected override string CreateSchemaTableSql(string quotedPrimaryKeyName)
     {
         return
             $"""
-             CREATE SCHEMA IF NOT EXISTS {base.SchemaTableSchema}; CREATE TABLE {base.FqSchemaTableName}
+             CREATE SCHEMA IF NOT EXISTS {SchemaTableSchema}; CREATE TABLE {FqSchemaTableName}
              (
                  schemaversionsid serial NOT NULL,
                  scriptname character varying(255) NOT NULL,

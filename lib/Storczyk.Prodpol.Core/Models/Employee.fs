@@ -10,36 +10,36 @@ type Employee() =
     [<Required>]
     [<Identity>]
     member val Id = -1L with get, set
-    
+
     [<Column("role_id")>]
     member val RoleId: int option = None with get, set
-    
+
     [<Column("email")>]
     [<RegularExpression("""^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
     [<Required>]
     member val Email = "" with get, set
-    
+
     [<Column("name_first")>]
     [<RegularExpression("^(\w+\s?)+$")>]
     [<Required>]
     member val NameFirst = "" with get, set
-    
+
     [<Column("name_last")>]
     [<RegularExpression("^(\w+\s?)+$")>]
     [<Required>]
     member val NameLast = "" with get, set
-    
+
     [<Column("phone_number")>]
     [<MinLength(1)>]
     [<RegularExpression("^\+?[1-9][0-9]{7,14}$")>]
     [<Required>]
     member val PhoneNumber = "" with get, set
-    
+
     [<Column("password_hash")>]
     member val PasswordHash: string option = None with get, set
-    
+
     [<Column("created_at")>]
     member val CreatedAt = DateTime.UtcNow with get, set
-    
+
     [<Column("enabled")>]
     member val Enabled = false with get, set

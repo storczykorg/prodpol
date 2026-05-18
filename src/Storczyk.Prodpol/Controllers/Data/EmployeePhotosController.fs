@@ -8,32 +8,32 @@ open Storczyk.Prodpol.Core.Models
 [<Route("api/data/employees/photos/")>]
 type EmployeePhotosController() =
     inherit ControllerBase()
-    
+
     [<HttpGet>]
     [<Route("all")>]
     member this.GetAll() =
         failwith "TODO"
         ""
-    
+
     [<HttpGet>]
     [<Route("{id:long}")>]
     member this.GetById(id: int64) =
         failwith "TODO"
         ""
-        
+
     [<HttpPatch>]
     [<Route("{id:long}")>]
-    member this.Update([<FromBody>]update: JsonPatchDocument<Employee>) =
+    member this.Update([<FromBody>] update: JsonPatchDocument<Employee>) =
         failwith "TODO"
         ""
-        
+
     [<HttpDelete>]
     [<Route("{id:long}")>]
     member this.Delete(id: int64) =
         failwith "TODO"
         ""
-        
+
     [<HttpPost>]
-    member this.Create([<FromBody>]entity: Employee) =
+    member this.Create([<FromBody>] entity: Employee) =
         failwith "TODO"
         ""

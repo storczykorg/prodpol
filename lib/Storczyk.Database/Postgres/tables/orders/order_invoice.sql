@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS prodpol.order_invoice
     total_cost  money,
     created_at  timestamp without time zone NOT NULL DEFAULT now(),
     e_invoice   xml,
-    payload     bytea                 NOT NULL,
+    payload     bytea                       NOT NULL,
     PRIMARY KEY (invoice_id)
 );

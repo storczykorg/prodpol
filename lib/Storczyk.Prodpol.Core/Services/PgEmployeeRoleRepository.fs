@@ -9,8 +9,8 @@ open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Utils.AsyncResult
 open Storczyk.Prodpol.Core.Utils.Task
 
-type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
-    interface IEmployeesRepository with
+type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
+    interface IEmployeeRoleRepository with
         member this.AddAsync(entity) =
             async {
                 let! ct = Async.CancellationToken
@@ -20,38 +20,26 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
 
                 match!
                     wrap (fun _ ->
-                        conn.ExecuteAsync(
+                        conn.ExecuteScalarAsync<int32>(
                             // language=postgresql
-                            "INSERT INTO prodpol.employees 
-                    (employee_id, name_first, name_last, email, phone_number, password_hash)
-                    VALUES 
-                        ($newKey, $nameFirst,
-                         $nameLast, $email,
-                         $phoneNumber, $passwordHash);",
-                            {| newKey = entity.Id
-                               nameFirst = entity.NameFirst
-                               nameLast = entity.NameLast
-                               email = entity.Email
-                               phoneNumber = entity.PhoneNumber
-                               passwordHash = entity.PasswordHash |}
+                            "INSERT INTO prodpol.employee_roles 
+                            (display_name, role_name)
+                            VALUES 
+                                ($displayName, $roleName)
+                            RETURNING role_id;",
+                            {| displayName = entity.DisplayName
+                               roleName = entity.RoleName |}
                         ))
-                    |> bind (function
-                        | 0 -> Error DatabaseError.NotFound
-                        | 1 -> Ok()
-                        | _ ->
-                            Error(
-                                DatabaseError.UnknownException(
-                                    InvalidOperationException
-                                        "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                                )
-                            ))
+                    |> bindIgnore (fun x ->
+                        entity.Id <- x
+                        async.Return(Ok()))
                 with
-                | Ok() ->
+                | Ok _ ->
                     do! scope.CommitAsync()
                     return Ok()
-                | e ->
+                | Error e ->
                     do! scope.RollbackAsync()
-                    return e
+                    return Error e
 
             }
 
@@ -65,8 +53,8 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 match!
                     conn.ExecuteAsync(
                         // language=postgresql
-                        "DELETE FROM prodpol.employees 
-                        WHERE employee_id = $id;",
+                        "DELETE FROM prodpol.employee_roles 
+                        WHERE role_name = $id;",
                         {| id = key |}
                     )
                 with
@@ -95,24 +83,24 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 let! reader =
                     wrap (fun _ ->
                         conn.QueryMultipleAsync(
-                            "SELECT * FROM prodpol.employees
+                            "SELECT * FROM prodpol.employee_roles
                     ORDER BY role_id;"
                         ))
 
                 // EVALUATE: check for memory leaks
                 // TODO: implement proper resource disposal
-                return reader |> Result.map _.ReadUnbufferedAsync<Employee>()
+                return reader |> Result.map _.ReadUnbufferedAsync<EmployeeRole>()
             }
 
-        member this.GetByIdAsync(key) : AsyncResult<Employee, DatabaseError> =
+        member this.GetByIdAsync(key) =
             async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
                 let! emp =
                     wrapOpt (fun () ->
-                        conn.QuerySingleOrDefaultAsync<Employee option>(
-                            "SELECT * FROM prodpol.employees WHERE employee_id = @id;",
+                        conn.QuerySingleOrDefaultAsync<EmployeeRole option>(
+                            "SELECT * FROM prodpol.employee_roles WHERE role_name = @id;",
                             param = {| id = key |},
                             commandTimeout = 1000
                         ))
@@ -120,7 +108,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 return emp
             }
 
-        member this.UpdateAsync (key: int64) (entity: Employee) : AsyncResult<unit, DatabaseError> =
+        member this.UpdateAsync key entity =
             async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
@@ -130,22 +118,16 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 match!
                     conn.ExecuteAsync(
                         // language=postgresql
-                        "UPDATE prodpol.employees 
+                        "UPDATE prodpol.employee_roles 
                         SET 
-                            employee_id = $newKey,
-                            name_first = $nameFirst,
-                            name_last = $nameLast,
-                            email = $email,
-                            phone_number = $phoneNumber,
-                            password_hash = $passwordHash
-                        WHERE employee_id = $oldId;",
+                            role_name = $newKey,
+                            role_id = $id,
+                            display_name = $displayName
+                        WHERE role_name = $oldId",
                         {| oldId = key
-                           newKey = entity.Id
-                           nameFirst = entity.NameFirst
-                           nameLast = entity.NameLast
-                           email = entity.Email
-                           phoneNumber = entity.PhoneNumber
-                           passwordHash = entity.PasswordHash |}
+                           newKey = entity.RoleName
+                           id = entity.Id
+                           displayName = entity.DisplayName |}
                     )
                 with
                 | 0 ->

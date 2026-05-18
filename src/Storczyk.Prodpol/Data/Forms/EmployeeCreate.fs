@@ -9,24 +9,26 @@ type EmployeeCreate() =
     [<RegularExpression("""^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
     [<Required>]
     member val Email = "" with get, set
+
     [<RegularExpression("^(\w+\s?)+$")>]
     [<Required>]
     member val NameFirst = "" with get, set
+
     [<RegularExpression("^(\w+\s?)+$")>]
     [<Required>]
     member val NameLast = "" with get, set
+
     [<RegularExpression("^\+?[1-9][0-9]{7,14}$")>]
     [<Phone>]
     [<Required>]
     member val PhoneNumber = "" with get, set
-    
-    member this.GetEmployee(id: int64, time: DateTime): Employee =
-       Employee(
-           Id = id,
-           Email = this.Email,
-           PhoneNumber = this.PhoneNumber,
-           NameFirst = this.NameFirst,
-           NameLast = this.NameLast,
-           CreatedAt = time
-           )
-        
+
+    member this.GetEmployee(id: int64, time: DateTime) : Employee =
+        Employee(
+            Id = id,
+            Email = this.Email,
+            PhoneNumber = this.PhoneNumber,
+            NameFirst = this.NameFirst,
+            NameLast = this.NameLast,
+            CreatedAt = time
+        )

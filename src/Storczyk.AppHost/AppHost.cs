@@ -1,14 +1,13 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var pgServer = builder.AddPostgres("pg")
-    .WithPgAdmin(configureContainer: resourceBuilder =>
+    .WithPgAdmin(resourceBuilder =>
     {
         resourceBuilder.WithLifetime(ContainerLifetime.Persistent);
         resourceBuilder.WithHostPort(2137);
     })
     .WithDataVolume(isReadOnly: false)
     .WithLifetime(ContainerLifetime.Persistent);
-
 
 
 var db = pgServer
@@ -31,7 +30,7 @@ var frontend = builder.AddViteApp("StorczykFrontend",
     .WithHttpHealthCheck("api/status/health")
     .WithExternalHttpEndpoints();
 var workerService = builder.AddProject<Projects.StorczykWorker>("StorczykWorker")
-    .WithReference(db, connectionName: "postgresdb")
+    .WithReference(db, "postgresdb")
     .WaitFor(db)
     .WaitFor(frontend);
 builder.Build().Run();
