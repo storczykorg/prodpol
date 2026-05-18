@@ -15,19 +15,22 @@ open Storczyk.Prodpol.Utils
 [<ApiController>]
 [<Route("api/data/employees/")>]
 type EmployeesController
-    (employees: IEmployeesRepository, snowflakes: ISnowflakeGenerator, logger: ILogger<EmployeesController>) =
+    (employees: IEmployeesRepository,
+     employeesRead: IEmployeesReadRepository,
+     snowflakes: ISnowflakeGenerator,
+     logger: ILogger<EmployeesController>) =
     inherit LoggedController()
     override this.Logger = logger
 
     [<HttpGet>]
     [<Route("all")>]
     member this.GetAll(token: CancellationToken) =
-        employees.GetAllAsync(token) |> this.mapAsyncResult
+        employeesRead.GetAllAsync(token) |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("{id:long}")>]
     member this.GetById(id: int64) =
-        employees.GetByIdAsync(id) |> this.mapAsyncResult
+        employeesRead.GetByIdAsync(id) |> this.mapAsyncResult
 
     [<HttpPatch>]
     [<Route("{id:long}")>]

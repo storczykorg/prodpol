@@ -8,6 +8,7 @@ public static class PostgresRepositoriesExtensions
     public static IServiceCollection AddPostgresRepositories(this IServiceCollection services)
     {
         services.AddTransient<IEmployeesRepository, PgEmployeeRepository>();
+        services.AddTransient<IEmployeesReadRepository, PgEmployeeRepository>();
         services.AddTransient<IEmployeeRoleRepository, PgEmployeeRoleRepository>();
 
         return services;

@@ -4,6 +4,7 @@ open System
 open System.ComponentModel.DataAnnotations
 open LinqToDB.Mapping
 
+[<Serializable>]
 [<Table("prodpol.employees")>]
 type Employee() =
     [<Column("employee_id")>]
@@ -43,3 +44,22 @@ type Employee() =
 
     [<Column("enabled")>]
     member val Enabled = false with get, set
+/// <summary>
+/// Extended version of <see cref="Employee"/> that includes computed columns.
+/// Use only on readonly operations
+/// </summary>
+[<Table("prodpol.employees")>]
+[<Serializable>]
+type EmployeeRead() =
+    inherit Employee()
+    [<Column("normalized_email")>]
+    member val NormalizedEmail = "" with get, set
+    
+    [<Column("full_name")>]
+    member val FullName = "" with get, set
+    
+    [<Column("normalized_name")>]
+    member val NormalizedName = "" with get, set
+    
+    [<Column("role_name")>]
+    member val RoleName: string option = None with get, set

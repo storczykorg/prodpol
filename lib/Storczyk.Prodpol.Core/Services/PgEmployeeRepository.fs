@@ -96,7 +96,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                     wrap (fun _ ->
                         conn.QueryMultipleAsync(
                             "SELECT * FROM prodpol.employees
-                    ORDER BY role_id;"
+                            ORDER BY employee_id;"
                         ))
 
                 // EVALUATE: check for memory leaks
@@ -165,4 +165,38 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                             )
                         )
 
+            }
+    interface IEmployeesReadRepository with
+        member this.GetAllAsync(token) =
+            async {
+                let! conn = dataSource.OpenConnectionAsync(token)
+
+                let! reader =
+                    wrap (fun _ ->
+                        conn.QueryMultipleAsync(
+                            "SELECT * FROM prodpol.employees
+                            LEFT JOIN prodpol.employee_roles er on employees.role_id = er.role_id
+                            ORDER BY employee_id;"
+                        ))
+
+                // EVALUATE: check for memory leaks
+                // TODO: implement proper resource disposal
+                return reader |> Result.map _.ReadUnbufferedAsync<EmployeeRead>()
+            }
+        member this.GetByIdAsync(key) =
+            async {
+                let! ct = Async.CancellationToken
+                let! conn = dataSource.OpenConnectionAsync(ct)
+
+                let! emp =
+                    wrapOpt (fun () ->
+                        conn.QuerySingleOrDefaultAsync<EmployeeRead option>(
+                            "SELECT * FROM prodpol.employees
+                             LEFT JOIN prodpol.employee_roles er on employees.role_id = er.role_id
+                             WHERE employee_id = @id;",
+                            param = {| id = key |},
+                            commandTimeout = 1000
+                        ))
+
+                return emp
             }
