@@ -65,3 +65,24 @@ public class PostgresUpgrader(
         return builder.Build();
     }
 }
+
+public class PostgresSeedUpgrader(
+    PostgresqlConnectionManager manager,
+    ILogger<PostgresUpgrader> logger
+)
+{
+    public virtual UpgradeEngine Build()
+    {
+        var builder = PostgresqlExtensions.PostgresqlDatabase(manager, "prodpol");
+        builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
+            path => path.Contains("seed"),
+            new SqlScriptOptions { RunGroupOrder = 5, ScriptType = ScriptType.RunAlways });
+
+        builder.WithScriptSorter(new DefaultScriptSorter());
+
+        builder.LogTo(logger);
+        builder.WithTransaction();
+
+        return builder.Build();
+    }
+}

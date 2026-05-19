@@ -14,6 +14,10 @@ public static class PostgresUpgraderExtensions
             services.GetRequiredService<PostgresqlConnectionManager>(),
             services.GetRequiredService<ILogger<PostgresUpgrader>>())
         );
+        builder.Services.AddTransient<PostgresSeedUpgrader>(services => new PostgresSeedUpgrader(
+            services.GetRequiredService<PostgresqlConnectionManager>(),
+            services.GetRequiredService<ILogger<PostgresUpgrader>>())
+        );
 
         return builder;
     }
