@@ -4,9 +4,9 @@
  * For a copy, see <https://opensource.org/licenses/MIT>.
  */
 
-create or replace function prodpol.valid_email(arg_email text)
+create or replace function prodpol.valid_language_code(lang_code text)
     returns boolean
     language sql as
 $$
-select arg_email ~ '^(([a-zA-Z0-9\-_.+/]+)|("([+.a-zA-Z0-9_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$';
+select lang_code ~ '^[a-z]{2}(-[a-z]{2})?$';
 $$

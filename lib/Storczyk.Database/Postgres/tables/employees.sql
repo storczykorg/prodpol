@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS "prodpol"."employees"
     CONSTRAINT CK_format_employees_name_last check ( name_last ~ '^(\w+\s?)+$' )
 );
 
-CALL add_constraint('prodpol.employees',
+CALL prodpol.add_constraint('prodpol.employees',
                     'CK_format_employees_email',
                     'CHECK (prodpol.valid_email(email))'::text, TRUE);
-CALL add_constraint('prodpol.employees',
+CALL prodpol.add_constraint('prodpol.employees',
                     'CK_format_employees_phone_number',
                     'CHECK (prodpol.valid_phone_number(phone_number))',
                     TRUE);

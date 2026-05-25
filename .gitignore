@@ -490,3 +490,6 @@ dist
 .idea
 node_modules
 .vscode
+.git
+.junie
+.agents

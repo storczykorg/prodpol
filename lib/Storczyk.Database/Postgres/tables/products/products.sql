@@ -7,6 +7,7 @@
 CREATE TABLE IF NOT EXISTS prodpol.products
 (
     product_id       bigserial                   NOT NULL,
+    product_name     varchar(255)                NOT NULL,
     created_at       timestamp without time zone NOT NULL DEFAULT now(),
     created_by       bigint                      NOT NULL,
     last_modified_by bigint                      NOT NULL,

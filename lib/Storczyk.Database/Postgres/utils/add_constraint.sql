@@ -52,3 +52,44 @@ END;
 $$
     LANGUAGE plpgsql;
 
+CREATE OR REPLACE PROCEDURE add_constraint(t_name text,
+                                                   c_name text,
+                                                   constraint_sql text)
+AS
+$$
+DECLARE
+    cmd text := 'ALTER TABLE ' || t_name || ' ADD CONSTRAINT ' || c_name || ' ' || constraint_sql || ';';
+BEGIN
+    IF NOT EXISTS (SELECT constraint_schema
+                        , constraint_name
+                   FROM information_schema.table_constraints
+                   where lower(constraint_name) = lower(c_name))
+    THEN
+        EXECUTE cmd;
+    END IF;
+END;
+$$
+    LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE add_constraint(t_name text,
+                                                   c_name text,
+                                                   constraint_sql text,
+                                                   force boolean)
+AS
+$$
+DECLARE
+    cmd text := 'ALTER TABLE ' || t_name || ' ADD CONSTRAINT ' || c_name || ' ' || constraint_sql || ';';
+BEGIN
+    IF force OR (NOT EXISTS (SELECT constraint_schema
+                                  , constraint_name
+                             FROM information_schema.table_constraints
+                             where lower(constraint_name) = lower(c_name)))
+    THEN
+        IF force then
+            Execute 'ALTER TABLE ' || t_name || ' DROP CONSTRAINT IF EXISTS ' || c_name || ';';
+        END IF;
+        EXECUTE cmd;
+    END IF;
+END;
+$$
+    LANGUAGE plpgsql;

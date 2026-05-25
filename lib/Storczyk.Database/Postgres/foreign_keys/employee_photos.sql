@@ -4,7 +4,7 @@
  * For a copy, see <https://opensource.org/licenses/MIT>.
  */
 
-CALL add_constraint('prodpol.employee_photos',
+CALL prodpol.add_constraint('prodpol.employee_photos',
                     'FK_employee_photos_employees',
                     'FOREIGN KEY (employee_id) ' ||
                     'REFERENCES prodpol.employees', TRUE);
