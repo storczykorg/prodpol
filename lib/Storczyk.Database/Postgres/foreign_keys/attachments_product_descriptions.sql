@@ -13,7 +13,7 @@ CALL add_constraint('prodpol.attachments_product_descriptions',
 CALL add_constraint('prodpol.attachments_product_descriptions',
                     'FK_attachments_product_descriptions_product_descriptions',
                     'FOREIGN KEY (product_descriptions_product_id) ' ||
-                    'REFERENCES prodpol.product_descriptions (product_id) ' ||
+                    'REFERENCES prodpol.products (product_id) ' ||
                     'ON DELETE CASCADE ' ||
                     'ON UPDATE CASCADE', TRUE);
 CALL add_constraint('prodpol.attachments_product_descriptions',
