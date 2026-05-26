@@ -6,7 +6,7 @@
 
 create or replace function prodpol.valid_language_code(lang_code text)
     returns boolean
-    language sql as
-$$
+    language sql
+BEGIN ATOMIC
 select lang_code ~ '^[a-z]{2}(-[a-z]{2})?$';
-$$
+END;

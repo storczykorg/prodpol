@@ -23,12 +23,16 @@ public class PostgresUpgrader(
             new SqlScriptOptions { RunGroupOrder = 5, ScriptType = ScriptType.RunAlways });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
+            path => path.Contains("type"),
+            new SqlScriptOptions { RunGroupOrder = 8, ScriptType = ScriptType.RunAlways });
+        
+        builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
             path => path.Contains("utils"),
-            new SqlScriptOptions { RunGroupOrder = 5, ScriptType = ScriptType.RunAlways });
+            new SqlScriptOptions { RunGroupOrder = 10, ScriptType = ScriptType.RunAlways });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
             path => path.Contains("tables"),
-            new SqlScriptOptions { RunGroupOrder = 10, ScriptType = ScriptType.RunAlways });
+            new SqlScriptOptions { RunGroupOrder = 15, ScriptType = ScriptType.RunAlways });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
             path => path.Contains("checks"),
