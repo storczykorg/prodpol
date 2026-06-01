@@ -14,12 +14,16 @@
     <ItemGroup>
         <Compile Include="Models\Employee.fs"/>
         <Compile Include="Models\EmployeeRole.fs"/>
+        <Compile Include="Models\EmployeeSearch.fs"/>
         <Compile Include="Data\DatabaseError.fs"/>
         <Compile Include="Data\IRepository.fs"/>
         <Compile Include="Utils\Task.fs"/>
-        <Compile Include="Services\PgEmployeeRepository.fs"/>
-        <Compile Include="Services\NullEmployeeRepository.fs"/>
+        <Compile Include="Utils\AsyncResult.fs"/>
+        <Compile Include="Utils\AsyncResultCE.fs"/>
         <Compile Include="Services\SnowflakeGenerator.fs"/>
+        <Compile Include="Services\NullEmployeeRepository.fs"/>
+        <Compile Include="Services\PgEmployeeRoleReadRepository.fs"/>
+        <Compile Include="Services\PgEmployeeRepository.fs"/>
         <Compile Include="Services\PgEmployeeRoleRepository.fs"/>
     </ItemGroup>
 

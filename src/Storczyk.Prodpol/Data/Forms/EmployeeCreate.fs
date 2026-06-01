@@ -23,7 +23,7 @@ type EmployeeCreate() =
     [<Required>]
     member val PhoneNumber = "" with get, set
 
-    member this.GetEmployee(id: int64, time: DateTime) : Employee =
+    member this.BuildEmployee(id: int64, time: DateTime) : Employee =
         Employee(
             Id = id,
             Email = this.Email,

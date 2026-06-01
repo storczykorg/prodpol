@@ -1,13 +1,13 @@
 CREATE OR REPLACE FUNCTION prodpol.ordered_employees(
     _ordering_key prodpol.employee_ordering_keys,
-    _asc bool) RETURNS SETOF prodpol.employees
+    _asc bool) RETURNS SETOF prodpol.employees_with_roles
     LANGUAGE plpgsql
     PARALLEL SAFE
 AS $$
 BEGIN
     RETURN QUERY
     SELECT *
-    FROM prodpol.employees
+    FROM prodpol.employees_with_roles
     ORDER BY
         CASE WHEN _asc THEN
             CASE _ordering_key
@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION prodpol.ordered_employees(
     _ordering_key prodpol.employee_ordering_keys,
     _asc bool,
     _previous_employee bigint,
-    _limit int) RETURNS SETOF prodpol.employees
+    _limit int) RETURNS SETOF prodpol.employees_with_roles
     LANGUAGE plpgsql
     PARALLEL SAFE
 AS $$
@@ -47,13 +47,13 @@ BEGIN
                    WHEN 'employee_phone_number' THEN phone_number
                END
         INTO _p_val
-        FROM prodpol.employees
+        FROM prodpol.employees_with_roles
         WHERE employee_id = _previous_employee;
     END IF;
 
     RETURN QUERY
     SELECT *
-    FROM prodpol.employees
+    FROM prodpol.employees_with_roles
     WHERE
         CASE WHEN _asc THEN
             CASE _ordering_key

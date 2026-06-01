@@ -1,11 +1,13 @@
 ﻿namespace Storczyk.Prodpol.Core.Services
 
 open System
+open System.Linq
 open Dapper
 open FSharp.Control
 open Npgsql
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
+open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Utils.AsyncResult
 open Storczyk.Prodpol.Core.Utils.Task
 
@@ -103,6 +105,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 // TODO: implement proper resource disposal
                 return reader |> Result.map _.ReadUnbufferedAsync<Employee>()
             }
+
         member this.CountAsync(token) =
             async {
                 let! conn = dataSource.OpenConnectionAsync(token)
@@ -172,6 +175,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                         )
 
             }
+
     interface IEmployeesReadRepository with
         member this.GetAllAsync(token) =
             async {
@@ -204,12 +208,14 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 // TODO: implement proper resource disposal
                 return reader |> Result.map _.ReadUnbufferedAsync<EmployeeRead>()
             }
+
         member this.CountAsync(token) =
             async {
                 let! conn = dataSource.OpenConnectionAsync(token)
                 let! cnt = wrap (fun _ -> conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employees;"))
                 return cnt
             }
+
         member this.GetByIdAsync(key) =
             async {
                 let! ct = Async.CancellationToken
@@ -226,4 +232,31 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                         ))
 
                 return emp
+            }
+
+    interface IEmployeeSearchRepository with
+        member this.SearchAsync(options: EmployeeSearchOption, token) =
+            asyncResult {
+                let! conn = dataSource.OpenConnectionAsync(token)
+
+                let! _emps =
+                    wrap (fun () ->
+                        conn.QueryAsync<EmployeeRead>(
+                            """SELECT * FROM prodpol.ordered_employees(
+                                _ordering_key := $orderBy,
+                                _limit := $limit,
+                                _asc := $asc,
+                                _previous_employee := $cursor,
+                                _email := $email,
+                                _phone_number := $phoneNumber,
+                                _fullname := $fullName
+                            )""",
+                            param = options
+                        ))
+
+                let emps = _emps.ToArray()
+
+                let _cursor = if emps.Length > 0 then Some(emps.Last().Id) else None
+
+                return EmployeeSearchResult(results = emps, nextCursor = _cursor)
             }

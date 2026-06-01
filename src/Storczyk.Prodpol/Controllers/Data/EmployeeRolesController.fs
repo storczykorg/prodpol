@@ -16,6 +16,11 @@ type EmployeesRolesController(roles: IEmployeeRoleRepository, logger: ILogger<Em
     override this.Logger = logger
 
     [<HttpGet>]
+    [<Route("count")>]
+    member this.GetCount(token: CancellationToken) =
+        roles.CountAsync(token) |> this.mapAsyncResult
+
+    [<HttpGet>]
     [<Route("all")>]
     member this.GetAll(token: CancellationToken) =
         roles.GetAllAsync(token) |> this.mapAsyncResult

@@ -8,33 +8,47 @@ open Microsoft.Extensions.Logging
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
-open Storczyk.Prodpol.Core.Utils.AsyncResult
+open Storczyk.Prodpol.Core.Utils.AsyncResultCE
 open Storczyk.Prodpol.Dat.Forms
 open Storczyk.Prodpol.Utils
 
 [<ApiController>]
 [<Route("api/data/employees/")>]
 type EmployeesController
-    (employees: IEmployeesRepository,
-     employeesRead: IEmployeesReadRepository,
-     snowflakes: ISnowflakeGenerator,
-     logger: ILogger<EmployeesController>) =
+    (
+        employees: IEmployeesRepository,
+        employeesRead: IEmployeesReadRepository,
+        snowflakes: ISnowflakeGenerator,
+        logger: ILogger<EmployeesController>
+    ) =
     inherit LoggedController()
     override this.Logger = logger
 
     [<HttpGet>]
     [<Route("all")>]
-    member this.GetAll(
-        token: CancellationToken,
-        [<FromQuery>] 
-        ?id : string,
-        [<FromQuery>] 
-        ?name: string,
-        [<FromQuery>] 
-        ?sortingKey: string,
-        [<FromQuery>] 
-        ?groupId: string) =
-            employeesRead.GetAllAsync(token) |> this.mapAsyncResult
+    member this.GetAll
+        (
+            token: CancellationToken,
+            [<FromQuery>] ?name: string,
+            [<FromQuery>] ?sortingKey: string,
+            [<FromQuery>] ?groupId: string
+        ) =
+        employeesRead.GetAllAsync(token) |> this.mapAsyncResult
+
+    [<HttpGet>]
+    [<Route("search")>]
+    member this.Search
+        (
+            token: CancellationToken,
+            [<FromServicesAttribute>] employeeSearch: IEmployeeSearchRepository,
+            [<FromQuery>] options: EmployeeSearchOption
+        ) =
+        employeeSearch.SearchAsync(options, token) |> this.mapAsyncResult
+
+    [<HttpGet>]
+    [<Route("count")>]
+    member this.GetCount(token: CancellationToken) =
+        employeesRead.CountAsync(token) |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("{id:long}")>]
@@ -44,11 +58,13 @@ type EmployeesController
     [<HttpPatch>]
     [<Route("{id:long}")>]
     member this.Update(id: int64, [<FromBody>] update: JsonPatchDocument<Employee>) : Async<ActionResult> =
-        employees.GetByIdAsync(id)
-        |> (bind (fun emp ->
+        asyncResult {
+            let! emp = employees.GetByIdAsync(id)
             update.ApplyTo emp
-            this.ValidateObject emp))
-        |> bindIgnore (employees.UpdateAsync id)
+            let! _ = async { return this.ValidateObject emp }
+            let! _ = employees.UpdateAsync id emp
+            return ()
+        }
         |> this.mapAsyncResult
 
     [<HttpDelete>]
@@ -61,9 +77,11 @@ type EmployeesController
         let time = DateTime.UtcNow
         let id: int64 = snowflakes.GetSnowflake(time)
 
-        let emp = entity.GetEmployee(id, time)
+        let emp = entity.BuildEmployee(id, time)
 
-        Return(this.ValidateObject emp)
-        |> (bindAsync employees.AddAsync)
-        |> (map (fun _ -> id))
+        asyncResult {
+            let! _ = async { return this.ValidateObject emp }
+            let! _ = employees.AddAsync emp
+            return id
+        }
         |> this.mapAsyncResult
