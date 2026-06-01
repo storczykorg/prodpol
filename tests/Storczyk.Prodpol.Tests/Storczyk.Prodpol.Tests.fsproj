@@ -14,9 +14,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Include="UnitTest1.fs" />
+      <Compile Include="UnitTest1.fs"/>
       <Compile Include="EmployeesRolesControllerTests.fs" />
-      <Compile Include="Program.fs" />
+      <Compile Include="TestMocks.fs" />
+      <Compile Include="Program.fs"/>
     </ItemGroup>
 
     <ItemGroup>

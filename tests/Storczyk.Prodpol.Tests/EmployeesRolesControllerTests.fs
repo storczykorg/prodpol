@@ -23,22 +23,22 @@ let ``GetAll returns Ok with roles`` () =
     let repoMock: Mock<IEmployeeRoleRepository> = Mock<IEmployeeRoleRepository>()
 
     repoMock
-        .Setup(fun m -> m.GetAllAsync(It.IsAny<CancellationToken>()))
+        .Setup(fun (m: IEmployeeRoleRepository) -> m.GetAllAsync(It.IsAny<CancellationToken>()))
         .Returns(fun (_: CancellationToken) -> async { return Ok(asyncSeq { yield role }) })
     |> ignore
 
-    let loggerMock = Mock<ILogger<EmployeesRolesController>>()
+    let loggerMock: Mock<ILogger<EmployeesRolesController>> = Mock<ILogger<EmployeesRolesController>>()
 
-    let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+    let controller: EmployeesRolesController = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
     // Act
-    let result = controller.GetAll(CancellationToken.None) |> Async.RunSynchronously
+    let result: ActionResult = controller.GetAll(CancellationToken.None) |> Async.RunSynchronously
 
     // Assert
     match result with
-    | :? OkObjectResult as ok ->
-        let value = ok.Value :?> AsyncSeq<EmployeeRole>
-        let items = value |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+    | :? OkObjectResult as (ok: OkObjectResult) ->
+        let value: AsyncSeq<EmployeeRole> = ok.Value :?> AsyncSeq<EmployeeRole>
+        let items: EmployeeRole array = value |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
         Assert.That(items.Length, Is.EqualTo(1))
         Assert.That(items.[0].RoleName, Is.EqualTo("admin"))
     | _ -> Assert.That(result, Is.TypeOf<OkObjectResult>(), "Expected OkObjectResult")
@@ -46,18 +46,18 @@ let ``GetAll returns Ok with roles`` () =
 [<Test>]
 let ``GetById returns NotFound when repository returns NotFound`` () =
     // Arrange
-    let repoMock = Mock<IEmployeeRoleRepository>()
+    let repoMock: Mock<IEmployeeRoleRepository> = Mock<IEmployeeRoleRepository>()
 
     repoMock
-        .Setup(fun m -> m.GetByIdAsync(It.IsAny<string>()))
+        .Setup(fun (m: IEmployeeRoleRepository) -> m.GetByIdAsync(It.IsAny<string>()))
         .Returns(fun (_: string) -> async { return Error DatabaseError.NotFound })
     |> ignore
 
-    let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-    let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+    let loggerMock: Mock<ILogger<EmployeesRolesController>> = Mock<ILogger<EmployeesRolesController>>()
+    let controller: EmployeesRolesController = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
     // Act
-    let result = controller.GetById("missing") |> Async.RunSynchronously
+    let result: ActionResult = controller.GetById("missing") |> Async.RunSynchronously
 
     // Assert
     Assert.That(result, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult")

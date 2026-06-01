@@ -56,7 +56,8 @@ F#-specific quirks and guidance for this agent:
 - Be careful with module vs namespace boundaries: keep public APIs in `module` or `namespace` consistently and avoid exposing mutable module-level state.
 - When editing F# project files (`.fsproj`), maintain file order for compilation; adding or moving source files requires updating `<Compile Include=...>` order.
 - For cross-language interaction (C# callers, ASP.NET DI): expose simple functions or interfaces from F# modules and wrap richer F# types in DTOs when crossing boundaries.
-- Use `dotnet restore`, `dotnet build`, and `dotnet test` for verification. Prefer running `dotnet test` in `tests/Storczyk.Prodpol.Tests` when changing core logic.
+ - Use `dotnet restore`, `dotnet build`, and `dotnet test` for verification.
+ - Run tests after any code changes using the plain `dotnet test` command executed from the repository root directory. Do not rely on `--no-build` or other flags — tests must be run with a full `dotnet test` in the project root.
 
 Tool preferences and limitations:
 - Use `dotnet` CLI for builds, tests, and publishing checks.
