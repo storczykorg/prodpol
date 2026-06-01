@@ -7,6 +7,6 @@
 create or replace function prodpol.valid_email(arg_email text)
     returns boolean
     language sql
-BEGIN ATOMIC
+AS $$
 select arg_email ~ '^(([a-zA-Z0-9\-_.+/]+)|("([+.a-zA-Z0-9_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$';
-END;
+$$;

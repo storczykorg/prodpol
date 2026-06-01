@@ -91,6 +91,12 @@ type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
                 // TODO: implement proper resource disposal
                 return reader |> Result.map _.ReadUnbufferedAsync<EmployeeRole>()
             }
+        member this.CountAsync(token) =
+            async {
+                let! conn = dataSource.OpenConnectionAsync(token)
+                let! cnt = wrap (fun _ -> conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employee_roles;"))
+                return cnt
+            }
 
         member this.GetByIdAsync(key) =
             async {

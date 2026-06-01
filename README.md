@@ -4,7 +4,9 @@
 Prodpol is an e-commerce CMS that targets modern technologies and solutions.
 
 Its main purpose is to provide an easy-to-manage application that works in a distributed environment and a template for similar solutions.
-## Modules
+## Libraries
+- `lib/Storczyk.Database` - .NET library containing database schema and ASP.NET Core migration services
+
 - `src/Storczyk.AppHost` - An Application Orchestrator that manages lifetime of other modules
 - `src/Storczyk.Frontend` - HTML App based on Vite + Vue
 - `src/Storczyk.Prodpol` - API server written in ASP.NET Core
@@ -16,5 +18,6 @@ Its main purpose is to provide an easy-to-manage application that works in a dis
 ## Requirements
 - Node v25 or higher
 - .NET 10 or higher
+- Docker - required only for running Aspire with database containerization
 ## Licence
 Prodpol and its modules are licenced on [MIT license](LICENCE.md)

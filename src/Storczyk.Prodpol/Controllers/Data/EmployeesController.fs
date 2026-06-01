@@ -24,8 +24,17 @@ type EmployeesController
 
     [<HttpGet>]
     [<Route("all")>]
-    member this.GetAll(token: CancellationToken) =
-        employeesRead.GetAllAsync(token) |> this.mapAsyncResult
+    member this.GetAll(
+        token: CancellationToken,
+        [<FromQuery>] 
+        ?id : string,
+        [<FromQuery>] 
+        ?name: string,
+        [<FromQuery>] 
+        ?sortingKey: string,
+        [<FromQuery>] 
+        ?groupId: string) =
+            employeesRead.GetAllAsync(token) |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("{id:long}")>]

@@ -4,7 +4,7 @@ CREATE OR REPLACE PROCEDURE prodpol.update_product_price(
     _employee_id bigint
 )
 LANGUAGE SQL
-BEGIN ATOMIC
+AS $$
     WITH updated AS (
         UPDATE prodpol.products
         SET price            = _new_price,
@@ -18,4 +18,4 @@ BEGIN ATOMIC
     SELECT _product_id, _new_price, _employee_id, last_modified_at
     FROM updated
     RETURNING price_update_id;
-END;
+$$;

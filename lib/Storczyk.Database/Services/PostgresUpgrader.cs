@@ -29,6 +29,10 @@ public class PostgresUpgrader(
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
             path => path.Contains("utils"),
             new SqlScriptOptions { RunGroupOrder = 10, ScriptType = ScriptType.RunAlways });
+        
+        builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
+            path => path.Contains("dictionaries"),
+            new SqlScriptOptions { RunGroupOrder = 13, ScriptType = ScriptType.RunAlways });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
             path => path.Contains("tables"),

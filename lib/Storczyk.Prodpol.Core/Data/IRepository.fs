@@ -6,6 +6,7 @@ open Storczyk.Prodpol.Core.Models
 type IReadRepository<'TKey, 'TValue> =
     interface
         abstract GetAllAsync: token: CancellationToken -> Async<Result<AsyncSeq<'TValue>, DatabaseError>>
+        abstract CountAsync: token: CancellationToken -> Async<Result<int64, DatabaseError>>
         abstract GetByIdAsync: key: 'TKey -> Async<Result<'TValue, DatabaseError>>
     end
 

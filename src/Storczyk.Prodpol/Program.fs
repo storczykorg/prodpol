@@ -17,50 +17,16 @@ open Storczyk.Prodpol.Core.Services
 
 module Program =
     let mutable exitCode = 0
-
-    let applyUpgrade (app: WebApplication) : bool =
-        use scope = app.Services.CreateScope()
-        let upgrader = app.Services.GetRequiredService<PostgresUpgrader>()
-
-        let result = upgrader.Build().PerformUpgrade()
-
-        if not result.Successful then
-            app.Logger.LogCritical("Can't apply migration: ", result.Error)
-            false
-        else
-            true
-    let applySeeding (app: WebApplication): bool =
-        use scope = app.Services.CreateScope()
-        let upgrader = app.Services.GetRequiredService<PostgresSeedUpgrader>()
-
-        let result = upgrader.Build().PerformUpgrade()
-
-        if not result.Successful then
-            app.Logger.LogCritical("Can't apply migration: ", result.Error)
-            false
-        else
-            true
-    
-    let mapProperty(_type: Type) (name: string) : PropertyInfo =
-        _type.GetProperties().FirstOrDefault(
-            fun prop ->
-                prop.GetCustomAttributes<ColumnAttribute>(true)
-                    .Any(fun attr -> attr.Name = name)
-                )
-    let addTypeMapping<'T>() =
-        SqlMapper.SetTypeMap(
-            typeof<'T>,
-            CustomPropertyTypeMap(
-                typeof<'T>,
-                mapProperty
-                )
-            )
     let ConfigureServices (builder: WebApplicationBuilder) =
         builder.AddPostgresUpgrader()
 
         let services = builder.Services
 
-        services.AddControllers()
+        builder.Services.AddControllers(fun options ->
+            options.ModelBinderProviders.Insert(0, Utils.FSharpOptionModelBinderProvider())
+        )
+
+
         services.AddOpenApi("v0")
 
         builder.AddNpgsqlDataSource("postgresdb")
@@ -79,9 +45,9 @@ module Program =
     [<EntryPoint>]
     let main args =
         DefaultTypeMap.MatchNamesWithUnderscores = true
-        addTypeMapping<EmployeeRead>()
-        addTypeMapping<Employee>()
-        addTypeMapping<EmployeeRole>()
+        ProgramMigration.addTypeMapping<EmployeeRead>()
+        ProgramMigration.addTypeMapping<Employee>()
+        ProgramMigration.addTypeMapping<EmployeeRole>()
         
         let builder = WebApplication.CreateBuilder(args)
 
@@ -89,9 +55,9 @@ module Program =
 
         let app = builder.Build()
 
-        if not (applyUpgrade app) then
+        if not (ProgramMigration.applyUpgrade app) then
             exitCode <- 1
-        if app.Environment.IsDevelopment() && not(applySeeding app) then
+        if app.Environment.IsDevelopment() && not(ProgramMigration.applySeeding app) then
             exitCode <- 2
         else
             MapApplication app

@@ -103,6 +103,12 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 // TODO: implement proper resource disposal
                 return reader |> Result.map _.ReadUnbufferedAsync<Employee>()
             }
+        member this.CountAsync(token) =
+            async {
+                let! conn = dataSource.OpenConnectionAsync(token)
+                let! cnt = wrap (fun _ -> conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employees;"))
+                return cnt
+            }
 
         member this.GetByIdAsync(key) : AsyncResult<Employee, DatabaseError> =
             async {
@@ -197,6 +203,12 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 // EVALUATE: check for memory leaks
                 // TODO: implement proper resource disposal
                 return reader |> Result.map _.ReadUnbufferedAsync<EmployeeRead>()
+            }
+        member this.CountAsync(token) =
+            async {
+                let! conn = dataSource.OpenConnectionAsync(token)
+                let! cnt = wrap (fun _ -> conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employees;"))
+                return cnt
             }
         member this.GetByIdAsync(key) =
             async {

@@ -3,7 +3,7 @@ CREATE OR REPLACE PROCEDURE prodpol.decrease_product_amount(
     IN amount integer
 )
 LANGUAGE SQL
-BEGIN ATOMIC
+AS $$
     WITH updated_amount AS (
         UPDATE prodpol.products
             SET available_amount = available_amount - amount
@@ -12,4 +12,4 @@ BEGIN ATOMIC
     INSERT INTO prodpol.product_amount_updates(product_id, amount_current, amount_delta, created_by)
     SELECT product_id, available_amount, $2, null
     FROM updated_amount;
-END;
+$$;

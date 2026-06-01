@@ -1,6 +1,6 @@
 CREATE OR REPLACE PROCEDURE prodpol.create_products_snapshot(product_id bigint)
 LANGUAGE SQL
-BEGIN ATOMIC
+AS $$
     INSERT INTO prodpol.product_information_snapshots
     (product_id, created, modified, price, unit_type, available_amount, unit_base, product_name, snapshot_at,
      price_updates, amount_updates, description_updates, descriptions)
@@ -57,4 +57,4 @@ BEGIN ATOMIC
              LEFT JOIN prodpol.employees created ON products.created_by = created.employee_id
              LEFT JOIN prodpol.employees modified ON products.last_modified_by = modified.employee_id
     WHERE products.product_id = $1;
-END;
+$$;

@@ -32,7 +32,7 @@ type EmployeesRolesController(roles: IEmployeeRoleRepository, logger: ILogger<Em
         |> (bind (fun emp ->
             update.ApplyTo emp
             this.ValidateObject emp))
-        |> bindAsync (roles.UpdateAsync id)
+        |> bindIgnore (roles.UpdateAsync id)
         |> this.mapAsyncResult
 
     [<HttpDelete>]

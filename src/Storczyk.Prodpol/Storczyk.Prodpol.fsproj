@@ -11,25 +11,26 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Utils\LoggedController.fs"/>
-        <Folder Include="Services\"/>
-        <Compile Include="Data\Forms\EmployeeCreate.fs"/>
-        <Compile Include="Controllers\StatusController.fs"/>
-        <Compile Include="Controllers\Data\EmployeesController.fs"/>
-        <Compile Include="Controllers\Data\EmployeeRolesController.fs"/>
-        <Compile Include="Controllers\Data\EmployeePhotosController.fs"/>
-        <Compile Include="Program.fs"/>
+        <Compile Include="Utils\LoggedController.fs" />
+        <Compile Include="Utils\FSharpOptionModelBinder.fs" />
+        <Folder Include="Services\" />
+        <Compile Include="Data\Forms\EmployeeCreate.fs" />
+        <Compile Include="Controllers\StatusController.fs" />
+        <Compile Include="Controllers\Data\EmployeesController.fs" />
+        <Compile Include="Controllers\Data\EmployeeRolesController.fs" />
+        <Compile Include="Controllers\Data\EmployeePhotosController.fs" /><Compile Include="applyMigrations.fs" />
+        <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\lib\Storczyk.Prodpol.Core\Storczyk.Prodpol.Core.fsproj"/>
-        <ProjectReference Include="..\..\lib\Storczyk.Database\Storczyk.Database.csproj"/>
+        <ProjectReference Include="..\..\lib\Storczyk.Prodpol.Core\Storczyk.Prodpol.Core.fsproj" />
+        <ProjectReference Include="..\..\lib\Storczyk.Database\Storczyk.Database.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Aspire.Npgsql" Version="13.3.3" />
-        <PackageReference Update="FSharp.Core" Version="10.1.300"/>
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch.SystemTextJson" Version="10.0.8"/>
+        <PackageReference Update="FSharp.Core" Version="10.1.300" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch.SystemTextJson" Version="10.0.8" />
     </ItemGroup>
 
 </Project>

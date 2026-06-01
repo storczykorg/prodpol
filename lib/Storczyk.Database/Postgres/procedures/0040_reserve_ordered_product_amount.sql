@@ -1,7 +1,7 @@
 CREATE OR REPLACE PROCEDURE prodpol.reserve_ordered_product_amount(
     IN _order_id bigint
 ) LANGUAGE SQL
-BEGIN ATOMIC
+AS $$
     WITH aggregated_orders AS (
         SELECT product_id, SUM(amount) AS total_amount
         FROM prodpol.order_products
@@ -18,4 +18,4 @@ BEGIN ATOMIC
     INSERT INTO prodpol.product_amount_updates(product_id, amount_current, amount_delta, created_by)
     SELECT product_id, available_amount, total_amount, null
     FROM updated;
-END;
+$$;

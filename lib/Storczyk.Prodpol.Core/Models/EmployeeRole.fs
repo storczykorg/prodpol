@@ -13,3 +13,9 @@ type EmployeeRole() =
 
     [<Column("role_name")>]
     member val RoleName = "" with get, set
+[<Table("prodpol.employee_roles")>]
+type EmployeeRoleRead() =
+    inherit EmployeeRole()
+
+    [<Column("employees_count")>]
+    member val EmployeesCount = 0 with get, set

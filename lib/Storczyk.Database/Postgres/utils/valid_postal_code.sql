@@ -7,6 +7,6 @@
 create or replace function prodpol.valid_postal_code(arg_postal text)
     returns boolean
     language sql
-BEGIN ATOMIC
+AS $$
 select arg_postal ~ '^\d{2}-\d{3}$';
-END;
+$$;
