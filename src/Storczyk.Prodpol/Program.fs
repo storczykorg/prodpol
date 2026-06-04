@@ -7,63 +7,105 @@ open System.Linq
 open System.Reflection
 open Dapper
 open LinqToDB.Mapping
+open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Builder
+open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
+open Npgsql
 open Storczyk.Database.Services
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
 
-module Program =
-    let mutable exitCode = 0
-    let ConfigureServices (builder: WebApplicationBuilder) =
-        builder.AddPostgresUpgrader()
 
-        let services = builder.Services
+type ProdpolServer() =
+    member this.Configure(builder: IHostApplicationBuilder) =
 
-        builder.Services.AddControllers(fun options ->
-            options.ModelBinderProviders.Insert(0, Utils.FSharpOptionModelBinderProvider())
-        )
+        this.ConfigureServices(builder.Services)
+        //.NET Aspire specific method
+        let enumMappings (dataSource: NpgsqlDataSourceBuilder) =
+            dataSource.MapEnum<EmployeeOrderKeys>("prodpol.employee_ordering_keys")
+            ()
+        
+        builder.AddNpgsqlDataSource(connectionName = "postgresdb",
+                                    configureDataSourceBuilder = enumMappings)
+        builder
 
+    member this.ConfigureServices(services: IServiceCollection) =
+        let mainAs = typeof<ProdpolServer>.Assembly
 
-        services.AddOpenApi("v0")
-
-        builder.AddNpgsqlDataSource("postgresdb")
+        services
+            .AddControllers(fun options ->
+                options.ModelBinderProviders.Insert(0, Utils.FSharpOptionModelBinderProvider()))
+            .AddApplicationPart(mainAs)
 
         services.AddPostgresRepositories()
+        services.AddPostgresUpgrader()
 
         services.AddSingleton<ISnowflakeGenerator>(SnowflakeGenerator Snowflake.DefaultSnowflakeOptions)
 
-    let MapApplication (app: WebApplication) =
+        services.AddOpenApi("v0")
+
+        ()
+
+    member this.MapApplication(app: WebApplication) =
+        app.UseRouting()
+
         if app.Environment.IsDevelopment() then
             app.MapOpenApi("/openapi/{documentName}.yaml") |> ignore
 
         app.UseAuthorization()
         app.MapControllers()
 
-    [<EntryPoint>]
-    let main args =
-        DefaultTypeMap.MatchNamesWithUnderscores = true
-        ProgramMigration.addTypeMapping<EmployeeRead>()
-        ProgramMigration.addTypeMapping<Employee>()
-        ProgramMigration.addTypeMapping<EmployeeRole>()
-        
+        app
+
+    member this.Build(args: string array) =
         let builder = WebApplication.CreateBuilder(args)
 
-        ConfigureServices builder
+        this.Configure builder
 
-        let app = builder.Build()
+        builder.Build() |> this.MapApplication
+
+    member this.BuildTest(args: string array, ?testServices: IServiceCollection -> unit) =
+        let builder = WebApplication.CreateBuilder(args)
+
+        builder.Services.AddHttpClient(fun x ->
+            let add = "http://localhost:5000/api/"
+            x.BaseAddress <- Uri(add))
+
+        this.Configure builder
+
+        (Option.defaultValue ignore testServices) builder.Services
+        let app = builder.Build() |> this.MapApplication
+
+        app.Start()
+        app
+
+    member this.WebApplicationBuilder(args: string array) =
+        let builder = WebApplication.CreateBuilder(args)
+
+        this.Configure builder |> ignore
+
+        builder
+
+module Program =
+    [<EntryPoint>]
+    let main args =
+        let mutable exitCode = 0
+        DefaultTypeMap.MatchNamesWithUnderscores = true
+        ProgramMigration.addTypeMapping<EmployeeRead> ()
+        ProgramMigration.addTypeMapping<Employee> ()
+        ProgramMigration.addTypeMapping<EmployeeRole> ()
+
+        let app = ProdpolServer().Build(args)
 
         if not (ProgramMigration.applyUpgrade app) then
             exitCode <- 1
-        if app.Environment.IsDevelopment() && not(ProgramMigration.applySeeding app) then
+
+        if app.Environment.IsDevelopment() && not (ProgramMigration.applySeeding app) then
             exitCode <- 2
         else
-            MapApplication app
-
             app.Run()
-        exitCode
-    
 
-        
+        exitCode

@@ -70,6 +70,8 @@ Recommended workflows and examples:
 - Add endpoint telemetry: add middleware registration in `Program.fs` or host builder, add typed logger injection in the controller/service, verify logs locally.
 - Implement repository change: update `Storczyk.Database/Services` then adapt repository interface in `Storczyk.Prodpol.Core`, update DI wiring in web host, run integration tests.
 
+Documentation location: /home/storczyk/Documents/git/prodpol/prodpol-docs/docs
+
 Example prompts to use this agent:
 - "Add a POST endpoint that accepts `Employee` and stores it via the repository; return 201 on success." 
 - "Investigate failing tests in `tests/Storczyk.Prodpol.Tests` after the recent model change." 

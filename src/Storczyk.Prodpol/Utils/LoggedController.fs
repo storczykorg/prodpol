@@ -17,11 +17,11 @@ type LoggedController() =
         | NotFound -> this.NotFound()
         | ConnectionTimeout -> this.Problem(statusCode = 408)
         | UnknownException ex ->
-            this.Logger.LogError("Unknown error", ex)
+            this.Logger.LogError("Unknown error: {0}", ex)
             this.Problem(statusCode = 500)
         | ValidationErrors error -> this.ValidationProblem()
         | e ->
-            this.Logger.LogError("Database error", e)
+            this.Logger.LogError("Database error: {0}", e)
             this.Problem(statusCode = 500)
 
     member this.ValidateObject(obj: 'a) : Result<'a, DatabaseError> =
@@ -39,6 +39,6 @@ type LoggedController() =
 
     member this.mapAsyncResult(x: AsyncResult<'a, DatabaseError>) : Async<ActionResult> =
         x
-        |> (map (fun o -> this.Ok(o) :> ActionResult))
+        |> map (fun o -> this.Ok(o) :> ActionResult)
         |> (mapError this.HandleError)
         |> extract

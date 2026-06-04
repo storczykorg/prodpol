@@ -2,9 +2,11 @@ namespace Storczyk.Prodpol
 
 #nowarn "20"
 
+open LinqToDB.Internal.DataProvider.PostgreSQL
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
+open Npgsql
 open Storczyk.Database.Services
 open System.Linq
 open System.Reflection

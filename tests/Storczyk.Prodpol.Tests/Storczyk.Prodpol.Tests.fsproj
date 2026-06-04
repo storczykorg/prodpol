@@ -16,6 +16,8 @@
     <ItemGroup>
       <Compile Include="UnitTest1.fs"/>
       <Compile Include="EmployeesRolesControllerTests.fs" />
+      <Compile Include="EmployeesControllerTests.fs" />
+      <Compile Include="TaskUtilsTests.fs" />
       <Compile Include="TestMocks.fs" />
       <Compile Include="Program.fs"/>
     </ItemGroup>

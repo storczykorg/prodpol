@@ -63,3 +63,5 @@ type EmployeeRead() =
     
     [<Column("role_name")>]
     member val RoleName: string option = None with get, set
+    [<Column("role_display_name")>]
+    member val RoleDisplayName: string option = None with get, set

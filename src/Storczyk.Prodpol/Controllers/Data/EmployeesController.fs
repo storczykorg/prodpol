@@ -43,7 +43,11 @@ type EmployeesController
             [<FromServicesAttribute>] employeeSearch: IEmployeeSearchRepository,
             [<FromQuery>] options: EmployeeSearchOption
         ) =
-        employeeSearch.SearchAsync(options, token) |> this.mapAsyncResult
+        asyncResult {
+            let! result = employeeSearch.SearchAsync(options, token)
+            
+            return result
+        } |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("count")>]
@@ -53,17 +57,20 @@ type EmployeesController
     [<HttpGet>]
     [<Route("{id:long}")>]
     member this.GetById(id: int64) =
-        employeesRead.GetByIdAsync(id) |> this.mapAsyncResult
+        asyncResult {
+            let! emp: EmployeeRead = employeesRead.GetByIdAsync(id)
+            return emp
+        } |> this.mapAsyncResult
 
     [<HttpPatch>]
     [<Route("{id:long}")>]
     member this.Update(id: int64, [<FromBody>] update: JsonPatchDocument<Employee>) : Async<ActionResult> =
         asyncResult {
-            let! emp = employees.GetByIdAsync(id)
+            let! emp: Employee = employees.GetByIdAsync(id)
             update.ApplyTo emp
             let! _ = async { return this.ValidateObject emp }
             let! _ = employees.UpdateAsync id emp
-            return ()
+            return this.Ok(emp)
         }
         |> this.mapAsyncResult
 

@@ -6,7 +6,20 @@ CREATE OR REPLACE FUNCTION prodpol.ordered_employees(
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT *
+    SELECT employee_id,
+           role_id,
+           email,
+           normalized_email,
+           name_first,
+           name_last,
+           full_name,
+           normalized_name,
+           phone_number,
+           password_hash,
+           created_at,
+           enabled,
+           role_name,
+           role_display_name
     FROM prodpol.employees_with_roles
     ORDER BY
         CASE WHEN _asc THEN
@@ -52,7 +65,20 @@ BEGIN
     END IF;
 
     RETURN QUERY
-    SELECT *
+    SELECT employee_id,
+           role_id,
+           email,
+           normalized_email,
+           name_first,
+           name_last,
+           full_name,
+           normalized_name,
+           phone_number,
+           password_hash,
+           created_at,
+           enabled,
+           role_name,
+           role_display_name
     FROM prodpol.employees_with_roles
     WHERE
         CASE WHEN _asc THEN

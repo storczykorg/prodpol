@@ -10,6 +10,7 @@ public static class PostgresRepositoriesExtensions
         services.AddTransient<IEmployeesRepository, PgEmployeeRepository>();
         services.AddTransient<IEmployeesReadRepository, PgEmployeeRepository>();
         services.AddTransient<IEmployeeRoleRepository, PgEmployeeRoleRepository>();
+        services.AddTransient<IEmployeeSearchRepository, PgEmployeeSearchRepository>();
 
         return services;
     }

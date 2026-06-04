@@ -7,6 +7,7 @@ open FSharp.Control
 open Npgsql
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
+open Storczyk.Prodpol.Core.Models.UtilHelpers
 open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Utils.AsyncResult
 open Storczyk.Prodpol.Core.Utils.Task
@@ -27,9 +28,9 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                             "INSERT INTO prodpol.employees 
                     (employee_id, name_first, name_last, email, phone_number, password_hash)
                     VALUES 
-                        ($newKey, $nameFirst,
-                         $nameLast, $email,
-                         $phoneNumber, $passwordHash);",
+                        (@newKey, @nameFirst,
+                         @nameLast, @email,
+                         @phoneNumber, @passwordHash);",
                             {| newKey = entity.Id
                                nameFirst = entity.NameFirst
                                nameLast = entity.NameLast
@@ -68,7 +69,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                     conn.ExecuteAsync(
                         // language=postgresql
                         "DELETE FROM prodpol.employees 
-                        WHERE employee_id = $id;",
+                        WHERE employee_id = @id;",
                         {| id = key |}
                     )
                 with
@@ -119,13 +120,12 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
                 let! emp =
-                    wrapOpt (fun () ->
-                        conn.QuerySingleOrDefaultAsync<Employee option>(
+                    wrap (fun () ->
+                        conn.QuerySingleOrDefaultAsync<Employee>(
                             "SELECT * FROM prodpol.employees WHERE employee_id = @id;",
                             param = {| id = key |},
                             commandTimeout = 1000
                         ))
-
                 return emp
             }
 
@@ -141,13 +141,13 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                         // language=postgresql
                         "UPDATE prodpol.employees 
                         SET 
-                            employee_id = $newKey,
-                            name_first = $nameFirst,
-                            name_last = $nameLast,
-                            email = $email,
-                            phone_number = $phoneNumber,
-                            password_hash = $passwordHash
-                        WHERE employee_id = $oldId;",
+                            employee_id = @newKey,
+                            name_first = @nameFirst,
+                            name_last = @nameLast,
+                            email = @email,
+                            phone_number = @phoneNumber,
+                            password_hash = @passwordHash
+                        WHERE employee_id = @oldId;",
                         {| oldId = key
                            newKey = entity.Id
                            nameFirst = entity.NameFirst
@@ -222,41 +222,14 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
                 let! emp =
-                    wrapOpt (fun () ->
-                        conn.QuerySingleOrDefaultAsync<EmployeeRead option>(
+                    wrap (fun () ->
+                        conn.QuerySingleOrDefaultAsync<EmployeeRead>(
                             "SELECT * FROM prodpol.employees
                              LEFT JOIN prodpol.employee_roles er on employees.role_id = er.role_id
-                             WHERE employee_id = @id;",
+                             WHERE employee_id = (@id);",
                             param = {| id = key |},
                             commandTimeout = 1000
                         ))
 
                 return emp
-            }
-
-    interface IEmployeeSearchRepository with
-        member this.SearchAsync(options: EmployeeSearchOption, token) =
-            asyncResult {
-                let! conn = dataSource.OpenConnectionAsync(token)
-
-                let! _emps =
-                    wrap (fun () ->
-                        conn.QueryAsync<EmployeeRead>(
-                            """SELECT * FROM prodpol.ordered_employees(
-                                _ordering_key := $orderBy,
-                                _limit := $limit,
-                                _asc := $asc,
-                                _previous_employee := $cursor,
-                                _email := $email,
-                                _phone_number := $phoneNumber,
-                                _fullname := $fullName
-                            )""",
-                            param = options
-                        ))
-
-                let emps = _emps.ToArray()
-
-                let _cursor = if emps.Length > 0 then Some(emps.Last().Id) else None
-
-                return EmployeeSearchResult(results = emps, nextCursor = _cursor)
             }

@@ -5,16 +5,16 @@ namespace Storczyk.Database.Services;
 
 public static class PostgresUpgraderExtensions
 {
-    public static IHostApplicationBuilder AddPostgresUpgrader(this IHostApplicationBuilder builder)
+    public static IServiceCollection AddPostgresUpgrader(this IServiceCollection builder)
     {
-        builder.Services.AddTransient<PostgresqlConnectionManager>(services =>
+        builder.AddTransient<PostgresqlConnectionManager>(services =>
             new PostgresqlConnectionManager(services.GetRequiredService<NpgsqlDataSource>())
         );
-        builder.Services.AddTransient<PostgresUpgrader>(services => new PostgresUpgrader(
+        builder.AddTransient<PostgresUpgrader>(services => new PostgresUpgrader(
             services.GetRequiredService<PostgresqlConnectionManager>(),
             services.GetRequiredService<ILogger<PostgresUpgrader>>())
         );
-        builder.Services.AddTransient<PostgresSeedUpgrader>(services => new PostgresSeedUpgrader(
+        builder.AddTransient<PostgresSeedUpgrader>(services => new PostgresSeedUpgrader(
             services.GetRequiredService<PostgresqlConnectionManager>(),
             services.GetRequiredService<ILogger<PostgresUpgrader>>())
         );

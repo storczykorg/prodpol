@@ -19,43 +19,43 @@ public class PostgresUpgrader(
     {
         var builder = PostgresqlExtensions.PostgresqlDatabase(manager, "prodpol");
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("schemas"),
-            new SqlScriptOptions { RunGroupOrder = 5, ScriptType = ScriptType.RunAlways });
+            path => path.Contains(".schemas."),
+            new SqlScriptOptions { RunGroupOrder = 5, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("type"),
-            new SqlScriptOptions { RunGroupOrder = 8, ScriptType = ScriptType.RunAlways });
+            path => path.Contains(".types."),
+            new SqlScriptOptions { RunGroupOrder = 8, ScriptType = ScriptType.RunOnce });
         
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("utils"),
-            new SqlScriptOptions { RunGroupOrder = 10, ScriptType = ScriptType.RunAlways });
+            path => path.Contains(".utils."),
+            new SqlScriptOptions { RunGroupOrder = 10, ScriptType = ScriptType.RunOnce });
         
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("dictionaries"),
-            new SqlScriptOptions { RunGroupOrder = 13, ScriptType = ScriptType.RunAlways });
+            path => path.Contains(".dictionaries."),
+            new SqlScriptOptions { RunGroupOrder = 13, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("tables"),
-            new SqlScriptOptions { RunGroupOrder = 15, ScriptType = ScriptType.RunAlways });
+            path => path.Contains(".tables."),
+            new SqlScriptOptions { RunGroupOrder = 15, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("checks"),
+            path => path.Contains(".checks."),
             new SqlScriptOptions { RunGroupOrder = 20, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("foreign_keys"),
+            path => path.Contains(".foreign_keys."),
             new SqlScriptOptions { RunGroupOrder = 30, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("indices"),
+            path => path.Contains(".indices."),
             new SqlScriptOptions { RunGroupOrder = 10, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("views"),
+            path => path.Contains(".views."),
             new SqlScriptOptions { RunGroupOrder = 50, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("procedures"),
+            path => path.Contains(".procedures."),
             new SqlScriptOptions { RunGroupOrder = 60, ScriptType = ScriptType.RunOnce });
 
         builder.WithScriptSorter(new DefaultScriptSorter());
@@ -83,7 +83,7 @@ public class PostgresSeedUpgrader(
     {
         var builder = PostgresqlExtensions.PostgresqlDatabase(manager, "prodpol");
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
-            path => path.Contains("seed"),
+            path => path.Contains(".seed."),
             new SqlScriptOptions { RunGroupOrder = 5, ScriptType = ScriptType.RunAlways });
 
         builder.WithScriptSorter(new DefaultScriptSorter());

@@ -12,12 +12,38 @@ $$
 BEGIN
 
     RETURN QUERY
-        WITH filtered_employees as (SELECT *
+        WITH filtered_employees as (SELECT employee_id,
+                                           role_id,
+                                           email,
+                                           normalized_email,
+                                           name_first,
+                                           name_last,
+                                           full_name,
+                                           normalized_name,
+                                           phone_number,
+                                           password_hash,
+                                           created_at,
+                                           enabled,
+                                           role_name,
+                                           role_display_name
                                     FROM prodpol.employees_with_roles
                                     WHERE position(coalesce(_fullname, '') IN normalized_name) > 0
                                       AND position(coalesce(_email, '') IN email) > 0
                                       AND position(coalesce(_phone_number, '') IN phone_number) > 0)
-        SELECT *
+        SELECT employee_id,
+               role_id,
+               email,
+               normalized_email,
+               name_first,
+               name_last,
+               full_name,
+               normalized_name,
+               phone_number,
+               password_hash,
+               created_at,
+               enabled,
+               role_name,
+               role_display_name
         FROM filtered_employees
         ORDER BY CASE
                      WHEN _asc THEN
@@ -47,7 +73,7 @@ CREATE OR REPLACE FUNCTION prodpol.ordered_employees(
     _limit int,
     _fullname varchar default null,
     _email varchar default null,
-    _phone_number varchar default null) RETURNS SETOF prodpol.employees
+    _phone_number varchar default null) RETURNS SETOF prodpol.employees_with_roles
     LANGUAGE plpgsql
     PARALLEL SAFE
 AS
@@ -58,8 +84,21 @@ BEGIN
 
     -- Get the value of the ordering column for the previous employee (for keyset pagination)
     IF _ordering_key <> 'employee_id' THEN
-        WITH filtered_employees as (SELECT *
-                                    FROM prodpol.employees
+        WITH filtered_employees as (SELECT employee_id,
+                                           role_id,
+                                           email,
+                                           normalized_email,
+                                           name_first,
+                                           name_last,
+                                           full_name,
+                                           normalized_name,
+                                           phone_number,
+                                           password_hash,
+                                           created_at,
+                                           enabled,
+                                           role_name,
+                                           role_display_name
+                                    FROM prodpol.employees_with_roles
                                     WHERE position(coalesce(_fullname, '') IN normalized_name) > 0
                                       AND position(coalesce(_email, '') IN email) > 0
                                       AND position(coalesce(_phone_number, '') IN phone_number) > 0)
@@ -74,12 +113,38 @@ BEGIN
     END IF;
 
     RETURN QUERY
-        WITH filtered_employees as (SELECT *
+        WITH filtered_employees as (SELECT employee_id,
+                                           role_id,
+                                           email,
+                                           normalized_email,
+                                           name_first,
+                                           name_last,
+                                           full_name,
+                                           normalized_name,
+                                           phone_number,
+                                           password_hash,
+                                           created_at,
+                                           enabled,
+                                           role_name,
+                                           role_display_name
                                     FROM prodpol.employees_with_roles
                                     WHERE position(coalesce(_fullname, '') IN normalized_name) > 0
                                       AND position(coalesce(_email, '') IN email) > 0
                                       AND position(coalesce(_phone_number, '') IN phone_number) > 0)
-        SELECT *
+        SELECT employee_id,
+               role_id,
+               email,
+               normalized_email,
+               name_first,
+               name_last,
+               full_name,
+               normalized_name,
+               phone_number,
+               password_hash,
+               created_at,
+               enabled,
+               role_name,
+               role_display_name
         FROM filtered_employees
         WHERE CASE
                   WHEN _asc THEN
