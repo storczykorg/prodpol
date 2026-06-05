@@ -6,21 +6,22 @@ open FSharp.Control
 open Npgsql
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
+open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Utils.AsyncResult
 open Storczyk.Prodpol.Core.Utils.Task
 
 type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
     interface IEmployeeRoleRepository with
         member this.AddAsync(entity) =
-            async {
+            asyncResult {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
                 use! scope = conn.BeginTransactionAsync(ct)
 
                 match!
-                    wrap (fun _ ->
-                        conn.ExecuteScalarAsync<int32>(
+                    wrapTask (
+                        conn.ExecuteScalarAsync<int>(
                             // language=postgresql
                             "INSERT INTO prodpol.employee_roles 
                             (display_name, role_name)
@@ -29,18 +30,15 @@ type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
                             RETURNING role_id;",
                             {| displayName = entity.DisplayName
                                roleName = entity.RoleName |}
-                        ))
-                    |> bindIgnore (fun x ->
-                        entity.Id <- x
-                        async.Return(Ok()))
+                        )
+                    )
                 with
-                | Ok _ ->
+                | Ok i ->
+                    entity.Id <- i
                     do! scope.CommitAsync()
-                    return Ok()
-                | Error e ->
-                    do! scope.RollbackAsync()
-                    return Error e
+                | Error e -> do! scope.RollbackAsync()
 
+                return ()
             }
 
         member this.DeleteAsync(key) =
@@ -77,25 +75,21 @@ type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
             }
 
         member this.GetAllAsync(token) =
-            async {
-                let! conn = dataSource.OpenConnectionAsync(token)
+            asyncResult {
+                use! conn = dataSource.OpenConnectionAsync(token)
 
-                let! reader =
-                    wrap (fun _ ->
-                        conn.QueryMultipleAsync(
-                            "SELECT * FROM prodpol.employee_roles
-                    ORDER BY role_id;"
-                        ))
+                let sql =
+                    """SELECT * FROM prodpol.employee_roles
+                    ORDER BY role_id;"""
 
-                // EVALUATE: check for memory leaks
-                // TODO: implement proper resource disposal
-                return reader |> Result.map _.ReadUnbufferedAsync<EmployeeRole>()
+                let! reader = wrapTask (conn.QueryAsync<EmployeeRole>(sql))
+                return reader |> AsAsyncEnumerable
             }
+
         member this.CountAsync(token) =
-            async {
+            asyncResult {
                 let! conn = dataSource.OpenConnectionAsync(token)
-                let! cnt = wrap (fun _ -> conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employee_roles;"))
-                return cnt
+                return! wrapTask (conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employee_roles;"))
             }
 
         member this.GetByIdAsync(key) =

@@ -3,6 +3,7 @@
 open System
 open System.ComponentModel.DataAnnotations
 open LinqToDB.Mapping
+open Storczyk.Prodpol.Core.Utils
 
 [<Serializable>]
 [<Table("prodpol.employees")>]
@@ -44,6 +45,9 @@ type Employee() =
 
     [<Column("enabled")>]
     member val Enabled = false with get, set
+
+    override this.ToString() = Json.readableJson this
+
 /// <summary>
 /// Extended version of <see cref="Employee"/> that includes computed columns.
 /// Use only on readonly operations
@@ -52,16 +56,20 @@ type Employee() =
 [<Serializable>]
 type EmployeeRead() =
     inherit Employee()
+
     [<Column("normalized_email")>]
     member val NormalizedEmail = "" with get, set
-    
+
     [<Column("full_name")>]
     member val FullName = "" with get, set
-    
+
     [<Column("normalized_name")>]
     member val NormalizedName = "" with get, set
-    
+
     [<Column("role_name")>]
     member val RoleName: string option = None with get, set
+
     [<Column("role_display_name")>]
     member val RoleDisplayName: string option = None with get, set
+
+    override this.ToString() = Json.readableJson this

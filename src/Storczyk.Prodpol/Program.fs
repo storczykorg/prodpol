@@ -3,16 +3,11 @@ namespace Storczyk.Prodpol
 #nowarn "20"
 
 open System
-open System.Linq
-open System.Reflection
 open Dapper
-open LinqToDB.Mapping
-open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Builder
-open Microsoft.AspNetCore.Hosting
+open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
 open Npgsql
 open Storczyk.Database.Services
 open Storczyk.Prodpol.Core.Models
@@ -22,14 +17,15 @@ open Storczyk.Prodpol.Core.Services
 type ProdpolServer() =
     member this.Configure(builder: IHostApplicationBuilder) =
 
+        builder.Configuration.AddUserSecrets()
+
         this.ConfigureServices(builder.Services)
         //.NET Aspire specific method
         let enumMappings (dataSource: NpgsqlDataSourceBuilder) =
             dataSource.MapEnum<EmployeeOrderKeys>("prodpol.employee_ordering_keys")
             ()
-        
-        builder.AddNpgsqlDataSource(connectionName = "postgresdb",
-                                    configureDataSourceBuilder = enumMappings)
+
+        builder.AddNpgsqlDataSource(connectionName = "postgresdb", configureDataSourceBuilder = enumMappings)
         builder
 
     member this.ConfigureServices(services: IServiceCollection) =

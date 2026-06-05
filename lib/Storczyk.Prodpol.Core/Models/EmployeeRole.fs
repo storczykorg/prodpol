@@ -1,6 +1,7 @@
 ﻿namespace Storczyk.Prodpol.Core.Models
 
 open LinqToDB.Mapping
+open Storczyk.Prodpol.Core.Utils
 
 [<Table("prodpol.employee_roles")>]
 type EmployeeRole() =
@@ -13,9 +14,14 @@ type EmployeeRole() =
 
     [<Column("role_name")>]
     member val RoleName = "" with get, set
+
+    override this.ToString() = Json.readableJson this
+
 [<Table("prodpol.employee_roles")>]
 type EmployeeRoleRead() =
     inherit EmployeeRole()
 
     [<Column("employees_count")>]
     member val EmployeesCount = 0 with get, set
+
+    override this.ToString() = Json.readableJson this

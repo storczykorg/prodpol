@@ -8,7 +8,7 @@ open Microsoft.Extensions.Logging
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
-open Storczyk.Prodpol.Core.Utils.AsyncResultCE
+open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Dat.Forms
 open Storczyk.Prodpol.Utils
 
@@ -40,13 +40,11 @@ type EmployeesController
     member this.Search
         (
             token: CancellationToken,
-            [<FromServicesAttribute>] employeeSearch: IEmployeeSearchRepository,
+            [<FromServices>] employeeSearch: IEmployeeSearchRepository,
             [<FromQuery>] options: EmployeeSearchOption
         ) =
         asyncResult {
-            let! result = employeeSearch.SearchAsync(options, token)
-            
-            return result
+           return! employeeSearch.SearchAsync(options, token)
         } |> this.mapAsyncResult
 
     [<HttpGet>]
@@ -65,13 +63,13 @@ type EmployeesController
     [<HttpPatch>]
     [<Route("{id:long}")>]
     member this.Update(id: int64, [<FromBody>] update: JsonPatchDocument<Employee>) : Async<ActionResult> =
-        asyncResult {
+        (asyncResult {
             let! emp: Employee = employees.GetByIdAsync(id)
-            update.ApplyTo emp
-            let! _ = async { return this.ValidateObject emp }
-            let! _ = employees.UpdateAsync id emp
-            return this.Ok(emp)
-        }
+            do (update.ApplyTo emp)
+            do! this.ValidateObject emp
+            do! employees.UpdateAsync id emp
+            return emp
+        }: AsyncResult<Employee>)
         |> this.mapAsyncResult
 
     [<HttpDelete>]
@@ -86,9 +84,8 @@ type EmployeesController
 
         let emp = entity.BuildEmployee(id, time)
 
-        asyncResult {
-            let! _ = async { return this.ValidateObject emp }
-            let! _ = employees.AddAsync emp
-            return id
-        }
+        (asyncResult {
+            do! this.ValidateObject emp |> Result.map ignore
+            do! employees.AddAsync emp
+        }: AsyncResult<unit>)
         |> this.mapAsyncResult

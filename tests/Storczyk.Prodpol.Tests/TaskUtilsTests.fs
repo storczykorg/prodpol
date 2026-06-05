@@ -2,14 +2,14 @@ module Storczyk.Prodpol.Tests.TaskUtilsTests
 
 open System
 open NUnit.Framework
-open System.Threading
 open System.Threading.Tasks
 open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Data
 
 [<Test>]
 let ``Task.wrap returns Ok on success`` () =
-    let r: Result<int,DatabaseError> = Task.wrap (fun _ -> Task.FromResult 42) |> Async.RunSynchronously
+    let r: Result<int, DatabaseError> =
+        Task.wrapAsync (fun _ -> Task.FromResult 42) |> Async.RunSynchronously
 
     match r with
     | Ok v -> Assert.That(v, Is.EqualTo(42))
@@ -17,8 +17,8 @@ let ``Task.wrap returns Ok on success`` () =
 
 [<Test>]
 let ``Task.wrap maps OperationCanceledException to OperationCancelled error`` () =
-    let t: Result<int,DatabaseError> =
-        Task.wrap (fun _ ->
+    let t: Result<int, DatabaseError> =
+        Task.wrapAsync (fun _ ->
             Task.Run<int>(fun () ->
                 raise (OperationCanceledException())
                 0))
@@ -30,8 +30,8 @@ let ``Task.wrap maps OperationCanceledException to OperationCancelled error`` ()
 
 [<Test>]
 let ``Task.wrap maps TimeoutException to ConnectionTimeout error`` () =
-    let t: Result<int,DatabaseError> =
-        Task.wrap (fun _ ->
+    let t: Result<int, DatabaseError> =
+        Task.wrapAsync (fun _ ->
             Task.Run<int>(fun () ->
                 raise (TimeoutException())
                 0))
@@ -43,7 +43,7 @@ let ``Task.wrap maps TimeoutException to ConnectionTimeout error`` () =
 
 [<Test>]
 let ``Task.wrapOpt maps None to NotFound`` () =
-    let r: Result<int,DatabaseError> =
+    let r: Result<int, DatabaseError> =
         Task.wrapOpt (fun _ -> Task.FromResult(None: int option))
         |> Async.RunSynchronously
 
@@ -53,7 +53,8 @@ let ``Task.wrapOpt maps None to NotFound`` () =
 
 [<Test>]
 let ``Async.wrap returns Ok on success`` () =
-    let r: Result<int,DatabaseError> = Async.wrap (fun _ -> async { return 7 }) |> Async.RunSynchronously
+    let r: Result<int, DatabaseError> =
+        Async.wrap (fun _ -> async { return 7 }) |> Async.RunSynchronously
 
     match r with
     | Ok v -> Assert.That(v, Is.EqualTo(7))
@@ -61,7 +62,7 @@ let ``Async.wrap returns Ok on success`` () =
 
 [<Test>]
 let ``Async.wrap maps TimeoutException to ConnectionTimeout`` () =
-    let r: Result<unit,DatabaseError> =
+    let r: Result<unit, DatabaseError> =
         Async.wrap (fun _ -> async { do raise (TimeoutException()) })
         |> Async.RunSynchronously
 

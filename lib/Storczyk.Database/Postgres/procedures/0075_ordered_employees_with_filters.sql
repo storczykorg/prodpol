@@ -1,185 +1,50 @@
 CREATE OR REPLACE FUNCTION prodpol.ordered_employees(
     _ordering_key prodpol.employee_ordering_keys,
-    _asc bool,
+    _asc boolean = TRUE,
+    _cursor_id bigint = null,
+    _limit int = 20,
     _fullname varchar default null,
     _email varchar default null,
-    _phone_number varchar default null
-) RETURNS SETOF prodpol.employees_with_roles
+    _phone_number varchar default null,
+    _role_names varchar array default null) RETURNS SETOF prodpol.employees_with_roles
     LANGUAGE plpgsql
     PARALLEL SAFE
 AS
 $$
 BEGIN
-
     RETURN QUERY
-        WITH filtered_employees as (SELECT employee_id,
-                                           role_id,
-                                           email,
-                                           normalized_email,
-                                           name_first,
-                                           name_last,
-                                           full_name,
-                                           normalized_name,
-                                           phone_number,
-                                           password_hash,
-                                           created_at,
-                                           enabled,
-                                           role_name,
-                                           role_display_name
-                                    FROM prodpol.employees_with_roles
-                                    WHERE position(coalesce(_fullname, '') IN normalized_name) > 0
-                                      AND position(coalesce(_email, '') IN email) > 0
-                                      AND position(coalesce(_phone_number, '') IN phone_number) > 0)
-        SELECT employee_id,
-               role_id,
-               email,
-               normalized_email,
-               name_first,
-               name_last,
-               full_name,
-               normalized_name,
-               phone_number,
-               password_hash,
-               created_at,
-               enabled,
-               role_name,
-               role_display_name
+        WITH filtered_employees as (SELECT *
+                                    FROM
+                                        prodpol.filtered_employees(
+                                                _fullname::varchar,
+                                                _email::varchar,
+                                                _phone_number::varchar,
+                                                _role_names::varchar array,
+                                                _cursor_id::bigint
+                                        ))
+        SELECT *
         FROM filtered_employees
         ORDER BY CASE
                      WHEN _asc THEN
                          CASE _ordering_key
-                             WHEN 'employee_full_name' THEN normalized_name
-                             WHEN 'employee_email' THEN normalized_email
-                             WHEN 'employee_phone_number' THEN phone_number
+                             WHEN 'employee_full_name' THEN (normalized_name, role_name, employee_id)
+                             WHEN 'employee_email' THEN (normalized_email, role_name, employee_id)
+                             WHEN 'employee_phone_number' THEN (phone_number, role_name, employee_id)
+                             WHEN 'employee_role_name' THEN (role_name, employee_id)
+                             ELSE (employee_id, employee_id)
                              END
-                     END ASC,
+                     END ASC NULLS LAST,
                  CASE
                      WHEN NOT _asc THEN
                          CASE _ordering_key
-                             WHEN 'employee_full_name' THEN normalized_name
-                             WHEN 'employee_email' THEN normalized_email
-                             WHEN 'employee_phone_number' THEN phone_number
+                             WHEN 'employee_full_name' THEN (normalized_name, role_name, employee_id)
+                             WHEN 'employee_email' THEN (normalized_email, role_name, employee_id)
+                             WHEN 'employee_phone_number' THEN (phone_number, role_name, employee_id)
+                             WHEN 'employee_role_name' THEN (role_name, employee_id)
+                             ELSE (employee_id, employee_id)
                              END
-                     END DESC,
-                 CASE WHEN _asc THEN employee_id END ASC,
-                 CASE WHEN NOT _asc THEN employee_id END DESC;
-END;
-$$;
+                     END DESC NULLS LAST
 
-CREATE OR REPLACE FUNCTION prodpol.ordered_employees(
-    _ordering_key prodpol.employee_ordering_keys,
-    _asc bool,
-    _previous_employee bigint,
-    _limit int,
-    _fullname varchar default null,
-    _email varchar default null,
-    _phone_number varchar default null) RETURNS SETOF prodpol.employees_with_roles
-    LANGUAGE plpgsql
-    PARALLEL SAFE
-AS
-$$
-DECLARE
-    _p_val text;
-BEGIN
-
-    -- Get the value of the ordering column for the previous employee (for keyset pagination)
-    IF _ordering_key <> 'employee_id' THEN
-        WITH filtered_employees as (SELECT employee_id,
-                                           role_id,
-                                           email,
-                                           normalized_email,
-                                           name_first,
-                                           name_last,
-                                           full_name,
-                                           normalized_name,
-                                           phone_number,
-                                           password_hash,
-                                           created_at,
-                                           enabled,
-                                           role_name,
-                                           role_display_name
-                                    FROM prodpol.employees_with_roles
-                                    WHERE position(coalesce(_fullname, '') IN normalized_name) > 0
-                                      AND position(coalesce(_email, '') IN email) > 0
-                                      AND position(coalesce(_phone_number, '') IN phone_number) > 0)
-        SELECT CASE _ordering_key
-                   WHEN 'employee_full_name' THEN normalized_name
-                   WHEN 'employee_email' THEN normalized_email
-                   WHEN 'employee_phone_number' THEN phone_number
-                   END
-        INTO _p_val
-        FROM filtered_employees
-        WHERE employee_id = _previous_employee;
-    END IF;
-
-    RETURN QUERY
-        WITH filtered_employees as (SELECT employee_id,
-                                           role_id,
-                                           email,
-                                           normalized_email,
-                                           name_first,
-                                           name_last,
-                                           full_name,
-                                           normalized_name,
-                                           phone_number,
-                                           password_hash,
-                                           created_at,
-                                           enabled,
-                                           role_name,
-                                           role_display_name
-                                    FROM prodpol.employees_with_roles
-                                    WHERE position(coalesce(_fullname, '') IN normalized_name) > 0
-                                      AND position(coalesce(_email, '') IN email) > 0
-                                      AND position(coalesce(_phone_number, '') IN phone_number) > 0)
-        SELECT employee_id,
-               role_id,
-               email,
-               normalized_email,
-               name_first,
-               name_last,
-               full_name,
-               normalized_name,
-               phone_number,
-               password_hash,
-               created_at,
-               enabled,
-               role_name,
-               role_display_name
-        FROM filtered_employees
-        WHERE CASE
-                  WHEN _asc THEN
-                      CASE _ordering_key
-                          WHEN 'employee_id' THEN employee_id > _previous_employee
-                          WHEN 'employee_full_name' THEN (normalized_name, employee_id) > (_p_val, _previous_employee)
-                          WHEN 'employee_email' THEN (normalized_email, employee_id) > (_p_val, _previous_employee)
-                          WHEN 'employee_phone_number' THEN (phone_number, employee_id) > (_p_val, _previous_employee)
-                          END
-                  ELSE
-                      CASE _ordering_key
-                          WHEN 'employee_id' THEN employee_id < _previous_employee
-                          WHEN 'employee_full_name' THEN (normalized_name, employee_id) < (_p_val, _previous_employee)
-                          WHEN 'employee_email' THEN (normalized_email, employee_id) < (_p_val, _previous_employee)
-                          WHEN 'employee_phone_number' THEN (phone_number, employee_id) < (_p_val, _previous_employee)
-                          END
-                  END
-        ORDER BY CASE
-                     WHEN _asc THEN
-                         CASE _ordering_key
-                             WHEN 'employee_full_name' THEN normalized_name
-                             WHEN 'employee_email' THEN normalized_email
-                             WHEN 'employee_phone_number' THEN phone_number
-                             END
-                     END ASC,
-                 CASE
-                     WHEN NOT _asc THEN
-                         CASE _ordering_key
-                             WHEN 'employee_full_name' THEN normalized_name
-                             WHEN 'employee_email' THEN normalized_email
-                             WHEN 'employee_phone_number' THEN phone_number
-                             END
-                     END DESC,
-                 CASE WHEN _asc THEN employee_id END ASC,
-                 CASE WHEN NOT _asc THEN employee_id END DESC
         LIMIT _limit;
 END;
 $$;

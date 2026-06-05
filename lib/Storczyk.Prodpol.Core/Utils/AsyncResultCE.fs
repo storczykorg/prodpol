@@ -3,7 +3,8 @@ namespace Storczyk.Prodpol.Core.Utils
 open System
 open System.Threading.Tasks
 open Storczyk.Prodpol.Core.Data
-open Storczyk.Prodpol.Core.Utils.Async
+open Storczyk.Prodpol.Core.Utils
+open Storczyk.Prodpol.Core.Utils.AsyncResult
 
 [<AutoOpen>]
 module AsyncResultCE =
@@ -16,45 +17,52 @@ module AsyncResultCE =
 
     type AsyncResultBuilder() =
         /// Return a successful value into the computation expression.
-        member inline _.Return(x: 'a) : AsyncResult<'a> = async { return Ok x }
+        member inline _.Return<'a>(x: 'a) : AsyncResult<'a> = async { return Ok x }
+
+        member inline _.Return<'a>(x: Async<'a>) : AsyncResult<'a> =
+            async {
+                let! r = x
+                return Ok r
+            }
 
         /// Return an existing `AsyncResult` directly.
-        member inline _.ReturnFrom(x: AsyncResult<'a>) = x
+        member inline _.ReturnFrom<'a>(x: AsyncResult<'a>) : AsyncResult<'a> = x
+        member inline _.ReturnFrom(x: Result<'a, DatabaseError>) = async { return x }
 
         /// Zero for expression: represents `Ok ()`.
         member inline _.Zero() : AsyncResult<unit> = async { return Ok() }
 
         /// Delay evaluation of the body.
-        member inline _.Delay(f: unit -> AsyncResult<'a>) : AsyncResult<'a> = async.Delay(f)
-        //member inline _.Delay(f: unit -> Async<'a>): AsyncResult<'a> =
-        //    wrap f
-        //member inline _.Delay(f: unit -> ValueTask<'a>): AsyncResult<'a> =
-        //    wrap (toAsyncFunc f)
+        member inline _.Delay<'a>(f: unit -> AsyncResult<'a>) : AsyncResult<'a> = f ()
 
-        /// Bind an `AsyncResult` producing the next computation.
-        member inline _.Bind(a: AsyncResult<'a>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
-            async {
-                let! r = a
+        member inline _.Bind<'b>(a: Task, f: unit -> AsyncResult<'b>) : AsyncResult<'b> = (bindAsync f) (wrapVoidTask a)
 
-                match r with
-                | Ok v -> return! f v
-                | Error e -> return Error e
-            }
+        member inline _.Bind(a: AsyncResult<'a>, f: unit -> AsyncResult<'a>) : AsyncResult<'a> =
+            (bindIgnore (fun _ -> f ())) a
 
-        /// Support binding `ValueTask` results inside the expression.
-        member inline _.Bind(a: ValueTask<'a>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
-            async {
-                let! r =
-                    wrap (fun _ ->
-                        async {
-                            let! z = a
-                            return! f z
-                        })
+        member inline _.Bind(a: Result<'a, DatabaseError>, f: unit -> AsyncResult<'a>) : AsyncResult<'a> =
+            (bindIgnore (fun _ -> f ())) (async { return a })
 
-                match r with
-                | Ok q -> return q
-                | Error e -> return Error e
-            }
+        member inline _.Bind<'a, 'b>(a: AsyncResult<'a>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> = bindAsync f a
+
+
+        member inline _.Bind<'a, 'b>(a: ValueTask<'a>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
+            let x: AsyncResult<'a> = wrapValueTask a
+            bindAsync f x
+
+        member inline _.Bind<'a, 'b>(a: Result<'a, DatabaseError>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
+            match a with
+            | Error e -> async { return Error e }
+            | Ok o -> f o
+
+        member inline _.Bind<'a, 'b>(a: Task<'a>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
+            let x: AsyncResult<'a> = wrapTask a
+            bindAsync f x
+
+
+        member inline _.Bind<'a, 'b>(a: Async<'a>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
+            let x: AsyncResult<'a> = wrapAsync a
+            bindAsync f x
 
         /// TryWith to handle exceptions inside the computation expression.
         member _.TryWith(body: unit -> AsyncResult<'a>, handler: exn -> AsyncResult<'a>) : AsyncResult<'a> =
@@ -75,14 +83,19 @@ module AsyncResultCE =
             }
 
         /// Using helper for `use` pattern; disposes resource after use.
-        member _.Using(resource: IDisposable, f: IDisposable -> AsyncResult<'a>) : AsyncResult<'a> =
+        member _.Using<'T, 'U when 'T :> IAsyncDisposable>
+            (asyncResource: 'T, f: 'T -> AsyncResult<'U>)
+            : AsyncResult<'U> =
             async {
                 try
-                    return! f resource
-                finally
-                    if not (isNull (box resource)) then
-                        resource.Dispose()
+                    let! result = (AsyncResult.bindAsync f) (async { return Ok(asyncResource) })
+                    do! asyncResource.DisposeAsync()
+                    return result
+                with e ->
+                    do! asyncResource.DisposeAsync().AsAsync()
+                    return DatabaseError.mapError e
             }
+
 
         /// For helper to iterate a sequence with async fallible body.
         member _.For(sequence: seq<'a>, body: 'a -> AsyncResult<unit>) : AsyncResult<unit> =
@@ -92,7 +105,7 @@ module AsyncResultCE =
                 let rec loop () =
                     async {
                         if enum.MoveNext() then
-                            let! res = body enum.Current
+                            let! res = body (enum.Current)
 
                             match res with
                             | Ok() -> return! loop ()
@@ -103,6 +116,14 @@ module AsyncResultCE =
 
                 return! loop ()
             }
+
+        member _.Combine<'a, 'b>(a: AsyncResult<'a>, b: AsyncResult<'b>) : AsyncResult<'b> =
+            async {
+                match! a with
+                | Ok _ -> return! b
+                | Error e -> return Error e
+            }
+
 
     /// Computation expression instance to use in code: `asyncResult { ... }`.
     let asyncResult: AsyncResultBuilder = AsyncResultBuilder()

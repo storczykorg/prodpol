@@ -1,20 +1,17 @@
+using Projects;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var pgServer = builder.AddPostgres("pg")
-    .WithPgAdmin(resourceBuilder =>
-    {
-        resourceBuilder.WithLifetime(ContainerLifetime.Persistent);
-        resourceBuilder.WithHostPort(2137);
-    })
-    .WithDataVolume(isReadOnly: false)
-    .WithLifetime(ContainerLifetime.Persistent);
+    .WithPgAdmin(resourceBuilder => { resourceBuilder.WithHostPort(2137); });
 
 
 var db = pgServer
+    .WithLifetime(ContainerLifetime.Session)
     .AddDatabase("prodpol", "prodpol");
 
 var backendService = builder
-    .AddProject<Projects.StorczykProdpol>("StorczykProdpol")
+    .AddProject<StorczykProdpol>("StorczykProdpol")
     .WithReference(db, "postgresdb")
     .WaitFor(db)
     .WithHttpHealthCheck("api/status/health")
@@ -29,7 +26,7 @@ var frontend = builder.AddViteApp("StorczykFrontend",
     .WithHttpEndpoint(env: "VITE_PORT")
     .WithHttpHealthCheck("api/status/health")
     .WithExternalHttpEndpoints();
-var workerService = builder.AddProject<Projects.StorczykWorker>("StorczykWorker")
+var workerService = builder.AddProject<StorczykWorker>("StorczykWorker")
     .WithReference(db, "postgresdb")
     .WaitFor(db)
     .WaitFor(frontend);

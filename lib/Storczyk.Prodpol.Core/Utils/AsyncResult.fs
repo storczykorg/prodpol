@@ -1,12 +1,19 @@
 namespace Storczyk.Prodpol.Core.Utils
 
+open System.Collections.Generic
+open System.Runtime.CompilerServices
+open System.Threading.Tasks
+open Storczyk.Prodpol.Core.Data
+
+/// Represents an asynchronous computation that may succeed with a value of
+/// type `'a` or fail with an error of type `'e`.
+///
+/// Equivalent to `Async<Result<'a, 'e>>` and used throughout the codebase
+/// to compose IO-bound operations that can fail.
+type AsyncResult<'a, 'e> = Async<Result<'a, 'e>>
+type AsyncResult<'a> = Async<Result<'a, DatabaseError>>
+
 module AsyncResult =
-    /// Represents an asynchronous computation that may succeed with a value of
-    /// type `'a` or fail with an error of type `'e`.
-    ///
-    /// Equivalent to `Async<Result<'a, 'e>>` and used throughout the codebase
-    /// to compose IO-bound operations that can fail.
-    type AsyncResult<'a, 'e> = Async<Result<'a, 'e>>
 
     /// Apply a synchronous mapping function to the success value.
     /// Leaves errors untouched.
@@ -67,3 +74,18 @@ module AsyncResult =
             | Ok a -> return a
             | Error b -> return b
         }
+
+    [<Extension>]
+    let AsAsyncEnumerable (ty: IEnumerable<'a>) =
+        { new IAsyncEnumerable<'a> with
+            member this.GetAsyncEnumerator(cancellationToken) =
+                let currentEnumerator = ty.GetEnumerator()
+
+                { new IAsyncEnumerator<'a> with
+                    member this.MoveNextAsync() =
+                        ValueTask.FromResult(currentEnumerator.MoveNext())
+
+                    member this.Current = currentEnumerator.Current
+                    member this.DisposeAsync() : ValueTask = ValueTask.CompletedTask
+
+                } }

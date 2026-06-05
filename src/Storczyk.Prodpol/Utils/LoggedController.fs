@@ -1,9 +1,9 @@
 ﻿namespace Storczyk.Prodpol.Utils
 
-open System
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
 open Storczyk.Prodpol.Core.Data
+open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Utils.AsyncResult
 
 [<AbstractClass>]
@@ -37,7 +37,11 @@ type LoggedController() =
                 )
             )
 
-    member this.mapAsyncResult(x: AsyncResult<'a, DatabaseError>) : Async<ActionResult> =
+    /// <summary>
+    /// Map results from <see cref="AsyncResult"/> to HTTP response
+    /// </summary>
+    /// <param name="x"></param>
+    member this.mapAsyncResult(x: AsyncResult<'a>) : Async<ActionResult> =
         x
         |> map (fun o -> this.Ok(o) :> ActionResult)
         |> (mapError this.HandleError)

@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   - Copyright 2026 storczyk.org. All rights reserved.
   - This work is licensed under the terms of the MIT license.  
   - For a copy, see <https://opensource.org/licenses/MIT>.
@@ -8,6 +8,7 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
+        <UserSecretsId>904fd349-e11b-4930-ae01-9911d7f264c1</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
