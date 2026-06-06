@@ -41,7 +41,7 @@ type FSharpOptionModelBinderProvider() =
     interface IModelBinderProvider with
         member _.GetBinder(context: ModelBinderProviderContext) =
             if context.Metadata.ModelType.IsGenericType &&
-                context.Metadata.ModelType.GetGenericTypeDefinition().Equals(typeof<option<int>>.GetGenericTypeDefinition()) then
+                context.Metadata.ModelType.GetGenericTypeDefinition() = typedefof<_ option> then
                 FSharpOptionModelBinder() :> IModelBinder
             else
                 null

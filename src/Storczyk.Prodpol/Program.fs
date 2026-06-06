@@ -3,6 +3,8 @@ namespace Storczyk.Prodpol
 #nowarn "20"
 
 open System
+open System.Text.Json.Serialization
+open System.Threading.Tasks
 open Dapper
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Configuration
@@ -12,6 +14,7 @@ open Npgsql
 open Storczyk.Database.Services
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
+open Storczyk.Prodpol.Utils
 
 
 type ProdpolServer() =
@@ -32,16 +35,29 @@ type ProdpolServer() =
         let mainAs = typeof<ProdpolServer>.Assembly
 
         services
-            .AddControllers(fun options ->
-                options.ModelBinderProviders.Insert(0, Utils.FSharpOptionModelBinderProvider()))
+            .AddControllers()
+                .AddMvcOptions(fun options ->
+                    options.ModelBinderProviders.Insert(0, FSharpOptionModelBinderProvider())
+                    ())
+            .AddJsonOptions(fun options ->
+                // Dodaj wsparcie dla typów F# (Option, Discriminated Unions, Records)
+                let fsharpConverter = JsonFSharpConverter(JsonFSharpOptions.FSharpLuLike())
+                options.JsonSerializerOptions.Converters.Insert(0, fsharpConverter))
             .AddApplicationPart(mainAs)
+        |> ignore
+
+        services.AddOpenTelemetry()
+            .WithLogging()
+            .WithMetrics()
+            .WithTracing()
+            |> ignore
+
+        services.AddOpenApi("v0")
 
         services.AddPostgresRepositories()
         services.AddPostgresUpgrader()
 
         services.AddSingleton<ISnowflakeGenerator>(SnowflakeGenerator Snowflake.DefaultSnowflakeOptions)
-
-        services.AddOpenApi("v0")
 
         ()
 
@@ -53,7 +69,6 @@ type ProdpolServer() =
 
         app.UseAuthorization()
         app.MapControllers()
-
         app
 
     member this.Build(args: string array) =
@@ -96,10 +111,13 @@ module Program =
 
         let app = ProdpolServer().Build(args)
 
-        if not (ProgramMigration.applyUpgrade app) then
+        let result0 = ProgramMigration.applyUpgrade app
+        let result1 = ProgramMigration.applySeeding app
+
+        if not result0 then
             exitCode <- 1
 
-        if app.Environment.IsDevelopment() && not (ProgramMigration.applySeeding app) then
+        if app.Environment.IsDevelopment() && not result1 then
             exitCode <- 2
         else
             app.Run()

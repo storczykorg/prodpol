@@ -31,6 +31,7 @@
     <ItemGroup>
         <PackageReference Include="Aspire.Npgsql" Version="13.3.3" />
         <PackageReference Update="FSharp.Core" Version="10.1.300" />
+        <PackageReference Include="FSharp.SystemTextJson" Version="1.4.36" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch.SystemTextJson" Version="10.0.8" />
     </ItemGroup>
 

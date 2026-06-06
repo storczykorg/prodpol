@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS prodpol.product_categories
     parent_id     integer,
     display_name  varchar(128) NOT NULL,
     category_name varchar(128) NOT NULL,
+    category_path character varying[],
     PRIMARY KEY (category_id),
     UNIQUE (category_name)
         INCLUDE (display_name)

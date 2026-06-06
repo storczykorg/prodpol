@@ -15,7 +15,10 @@ SELECT
     c.email,
     COUNT(ot.order_id) as total_orders,
     SUM(ot.total_order_value) as total_spent,
-    AVG(ot.total_order_value) as average_order_value,
+    AVG(ot.total_order_value::numeric) as average_order_value,
+    percentile_cont(0.25) WITHIN GROUP ( ORDER BY ot.total_order_value::numeric ) as p25,
+    percentile_cont(0.50) WITHIN GROUP ( ORDER BY ot.total_order_value::numeric ) as p50,
+    percentile_cont(0.75) WITHIN GROUP ( ORDER BY ot.total_order_value::numeric ) as p75,
     MAX(ot.total_order_value) as most_expensive_order,
     (SELECT MAX(created_at) FROM prodpol.orders WHERE customer_id = c.customer_id) as last_order_date
 FROM prodpol.customers c
