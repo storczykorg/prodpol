@@ -101,8 +101,7 @@ type ProdpolServer() =
         builder
 
 module Program =
-    [<EntryPoint>]
-    let main args =
+    let runServer args =
         let mutable exitCode = 0
         DefaultTypeMap.MatchNamesWithUnderscores = true
         ProgramMigration.addTypeMapping<EmployeeRead> ()
@@ -116,10 +115,46 @@ module Program =
 
         if not result0 then
             exitCode <- 1
-
-        if app.Environment.IsDevelopment() && not result1 then
+        else if app.Environment.IsDevelopment() && not result1 then
             exitCode <- 2
         else
             app.Run()
 
         exitCode
+    let runOnlyMigrations args =
+        let mutable exitCode = 0
+        DefaultTypeMap.MatchNamesWithUnderscores = true
+        ProgramMigration.addTypeMapping<EmployeeRead> ()
+        ProgramMigration.addTypeMapping<Employee> ()
+        ProgramMigration.addTypeMapping<EmployeeRole> ()
+
+        let app = ProdpolServer().Build(args)
+
+        let result0 = ProgramMigration.applyUpgrade app
+        let result1 = ProgramMigration.applySeeding app
+
+        if not result0 then
+            exitCode <- 1
+        else if app.Environment.IsDevelopment() && not result1 then
+            exitCode <- 2
+        exitCode
+    let nukeDatabase args =
+        0
+    [<EntryPoint>]
+    let main args =
+        let mutable result = 0
+        if array.Exists(args, fun (x: string) -> 0 = String.Compare(x, "--nuke", true)) then
+            result <- nukeDatabase args
+
+        if 0 = result && array.Exists(args, fun (x: string) -> 0 = String.Compare(x, "--migrate", true)) then
+            printfn "Running only migrations"
+            result <- runOnlyMigrations args
+            if result <> 0 then
+                eprintf "Migrations failed, code: %s", result
+                ()
+            else
+                printfn "Success"
+                ()
+        else
+            result <- runServer args
+        result

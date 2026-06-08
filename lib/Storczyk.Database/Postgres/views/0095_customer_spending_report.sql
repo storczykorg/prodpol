@@ -24,3 +24,6 @@ SELECT
 FROM prodpol.customers c
 JOIN order_totals ot ON c.customer_id = ot.customer_id
 GROUP BY c.customer_id, c.full_name, c.email;
+
+comment on view prodpol.customer_spending_report
+is 'aggregated view showing customer with summary of their spendings'

@@ -79,7 +79,7 @@ public class PostgresUpgrader(
 
 public class PostgresSeedUpgrader(
     PostgresqlConnectionManager manager,
-    ILogger<PostgresUpgrader> logger
+    ILogger<PostgresSeedUpgrader> logger
 )
 {
     public virtual UpgradeEngine Build()

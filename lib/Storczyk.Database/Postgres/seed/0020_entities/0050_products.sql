@@ -1,12 +1,62 @@
-INSERT INTO prodpol.products
-(product_id, created_at, created_by, last_modified_by,
- last_modified_at, price, unit_type,
- available_amount, unit_base,
- product_name)
-VALUES (2, '2026-05-25 09:11:57.690469', 26, 26,
+insert into prodpol.products (product_id, created_at, created_by, last_modified_by,
+                              last_modified_at, price, unit_type,
+                              available_amount, unit_base,
+                              product_name)
+values (2, '2026-05-25 09:11:57.690469', 26, 26,
         '2026-05-25 09:11:57.690469', '$67.00', 1, 10000, 1, 'test.produkt'),
        (3, '2026-05-25 10:00:00.000000', 26, 26,
         '2026-05-25 10:00:00.000000', '$120.00', 1, 500, 1, 'test.part'),
        (4, '2026-05-25 10:05:00.000000', 26, 26,
-        '2026-05-25 10:05:00.000000', '$45.50', 2, 200, 1, 'test.material')
-ON CONFLICT DO NOTHING;
+        '2026-05-25 10:05:00.000000', '$45.50', 2, 200, 1, 'test.material'),
+       (10, '2026-06-08 11:00:00.000000', 26, 26,
+        '2026-06-08 11:00:00.000000', '$12.50', 1, 1000, 1, 'screw.m8.20'),
+       (11, '2026-06-08 11:05:00.000000', 26, 26,
+        '2026-06-08 11:05:00.000000', '$15.00', 1, 800, 1, 'screw.m10.30'),
+       (12, '2026-06-08 11:10:00.000000', 26, 26,
+        '2026-06-08 11:10:00.000000', '$5.50', 2, 500, 1, 'steel.sheet.2mm'),
+       (13, '2026-06-08 11:15:00.000000', 26, 26,
+        '2026-06-08 11:15:00.000000', '$8.20', 2, 300, 1, 'steel.sheet.5mm'),
+       (14, '2026-06-08 11:20:00.000000', 26, 26,
+        '2026-06-08 11:20:00.000000', '$25.00', 2, 150, 1, 'alu.profile.40x40'),
+       (15, '2026-06-08 11:25:00.000000', 26, 26,
+        '2026-06-08 11:25:00.000000', '$32.00', 2, 100, 1, 'alu.profile.80x80'),
+       (16, '2026-06-08 11:30:00.000000', 26, 26,
+        '2026-06-08 11:30:00.000000', '$1.20', 1, 5000, 1, 'washer.m8'),
+       (17, '2026-06-08 11:35:00.000000', 26, 26,
+        '2026-06-08 11:35:00.000000', '$2.50', 1, 3000, 1, 'nut.m8'),
+       (18, '2026-06-08 11:40:00.000000', 26, 26,
+        '2026-06-08 11:40:00.000000', '$120.00', 1, 50, 1, 'box.cardboard.large'),
+       (19, '2026-06-08 11:45:00.000000', 26, 26,
+        '2026-06-08 11:45:00.000000', '$45.00', 1, 200, 1, 'tape.packing'),
+       (20, '2026-06-08 11:50:00.000000', 26, 26,
+        '2026-06-08 11:50:00.000000', '$350.00', 1, 10, 1, 'engraving.service.premium'),
+       (21, '2026-06-08 11:55:00.000000', 26, 26,
+        '2026-06-08 11:55:00.000000', '$55.00', 2, 50, 1, 'copper.pipe.15mm'),
+       (22, '2026-06-08 12:00:00.000000', 26, 26,
+        '2026-06-08 12:00:00.000000', '$12.00', 1, 100, 1, 'chemical.cleaner.1l'),
+       (23, '2026-06-08 12:05:00.000000', 26, 26,
+        '2026-06-08 12:05:00.000000', '$2500.00', 1, 5, 1, 'bundle.starter.kit'),
+       (24, '2026-06-08 12:10:00.000000', 26, 26,
+        '2026-06-08 12:10:00.000000', '$180.00', 2, 20, 1, 'steel.rod.10mm')
+on conflict do nothing;
+
+do
+$$
+    declare
+        product       prodpol.products;
+        v_employee_id prodpol.employees.employee_id%TYPE;
+    begin
+        for product in ( select * from prodpol.products )
+            loop
+                select employee_id into v_employee_id from prodpol.employees order by random() limit 1;
+
+                for i in 0..3
+                    loop
+                        call prodpol.update_product_price(product.product_id, product.price * (0.5 + random()),
+                                                          v_employee_id);
+                    end loop;
+
+            end loop;
+
+    end;
+$$ language plpgsql;

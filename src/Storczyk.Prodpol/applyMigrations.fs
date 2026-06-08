@@ -38,6 +38,17 @@ module ProgramMigration =
             false
         else
             true
+    let nukeDb (app: WebApplication): bool =
+        use scope = app.Services.CreateScope()
+        let upgrader = scope.ServiceProvider.GetRequiredService<PostgresNuke>()
+
+        let result = upgrader.Build().PerformUpgrade()
+
+        if not result.Successful then
+            app.Logger.LogCritical("Can't nuke database: ", result.Error)
+            false
+        else
+            true
     let mapProperty(_type: Type) (name: string) : PropertyInfo =
         _type.GetProperties().FirstOrDefault(
             fun prop ->

@@ -13,3 +13,6 @@ AS
            unit_base
     FROM prodpol.order_products
     LEFT JOIN prodpol.products p on p.product_id = order_products.product_id;
+
+comment on view prodpol.order_products_joined
+is 'order_products joined with products'

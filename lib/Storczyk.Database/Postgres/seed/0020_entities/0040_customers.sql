@@ -1,14 +1,27 @@
-INSERT INTO prodpol.customers
-(customer_id, email, name_first, phone_number, name_last)
-VALUES
-    (10, 'afufijnp11@example.com', 'Adrianna', '+48671839973', 'Sobczak'),
-    (11, 'ssdkvivs75@example.com', 'Magdalena', '+48783200228', 'Górska'),
-    (12, 'iqusdqig87@example.com', 'Tymoteusz', '+48799865096', 'Malinowska'),
-    (13, 'hfaqmmes7@example.com', 'Oliwier', '+48883736250', 'Czarnecki'),
-    (14, 'qcmdqoru56@example.com', 'Florian', '+48669036269', 'Konieczny'),
-    (15, 'khrpaxvh11@example.com', 'Emiliia', '+48887875624', 'Krupa'),
-    (16, 'gxfklsgo83@example.com', 'Konstanty', '+48537433267', 'Majewska'),
-    (17, 'tsdxlpaa82@example.com', 'Kamil', '+48881236269', 'Duda'),
-    (18, 'mziaqqkn11@example.com', 'Borys', '+48676793813', 'Sikorski'),
-    (19, 'weijirzv78@example.com', 'Edward', '+48694838343', 'Nowakowski')
-ON CONFLICT DO NOTHING;
+insert into prodpol.customers (customer_id, email, name_first, phone_number, name_last)
+values (10, 'afufijnp11@example.com', 'Adrianna', '+48671839973', 'Sobczak'),
+       (11, 'ssdkvivs75@example.com', 'Magdalena', '+48783200228', 'Górska'),
+       (12, 'iqusdqig87@example.com', 'Tymoteusz', '+48799865096', 'Malinowska'),
+       (13, 'hfaqmmes7@example.com', 'Oliwier', '+48883736250', 'Czarnecki'),
+       (14, 'qcmdqoru56@example.com', 'Florian', '+48669036269', 'Konieczny'),
+       (15, 'khrpaxvh11@example.com', 'Emiliia', '+48887875624', 'Krupa'),
+       (16, 'gxfklsgo83@example.com', 'Konstanty', '+48537433267', 'Majewska'),
+       (17, 'tsdxlpaa82@example.com', 'Kamil', '+48881236269', 'Duda'),
+       (18, 'mziaqqkn11@example.com', 'Borys', '+48676793813', 'Sikorski'),
+       (19, 'weijirzv78@example.com', 'Edward', '+48694838343', 'Nowakowski'),
+       (30, 'j.kowal@firma.pl', 'Jan', '+48500200300', 'Kowal'),
+       (31, 'a.nowakowska@sklep.pl', 'Anna', '+48500200301', 'Nowakowska'),
+       (32, 'm.wisniewski@test.com', 'Marek', '+48500200302', 'Wisniewski'),
+       (33, 'k.wojcik@hurt.pl', 'Krzysztof', '+48500200303', 'Wojcik'),
+       (34, 'e.kaminska@biuro.pl', 'Ewa', '+48500200304', 'Kaminska'),
+       (35, 'p.lewandowski@test.pl', 'Pawel', '+48500200305', 'Lewandowski'),
+       (36, 'm.zielinska@produkcje.pl', 'Monika', '+48500200306', 'Zielinska'),
+       (37, 't.szymanski@global.com', 'Tomasz', '+48500200307', 'Szymanski'),
+       (38, 'b.wozniak@lokalny.pl', 'Barbara', '+48500200308', 'Wozniak'),
+       (39, 'a.dabrowski@test.com', 'Andrzej', '+48500200309', 'Dabrowski'),
+       (40, 'j.kozlowska@uslugi.pl', 'Joanna', '+48500200310', 'Kozlowska'),
+       (41, 'r.jankowski@export.com', 'Robert', '+48500200311', 'Jankowski'),
+       (42, 'm.mazur@dom.pl', 'Magdalena', '+48500200312', 'Mazur'),
+       (43, 's.krawczyk@test.pl', 'Stanislaw', '+48500200313', 'Krawczyk'),
+       (44, 'd.piotrowski@budowa.pl', 'Dariusz', '+48500200314', 'Piotrowski')
+on conflict do nothing;

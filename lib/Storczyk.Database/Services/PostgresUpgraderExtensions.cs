@@ -16,7 +16,11 @@ public static class PostgresUpgraderExtensions
         );
         builder.AddTransient<PostgresSeedUpgrader>(services => new PostgresSeedUpgrader(
             services.GetRequiredService<PostgresqlConnectionManager>(),
-            services.GetRequiredService<ILogger<PostgresUpgrader>>())
+            services.GetRequiredService<ILogger<PostgresSeedUpgrader>>())
+        );
+        builder.AddTransient<PostgresNuke>(services => new PostgresNuke(
+            services.GetRequiredService<PostgresqlConnectionManager>(),
+            services.GetRequiredService<ILogger<PostgresNuke>>())
         );
 
         return builder;

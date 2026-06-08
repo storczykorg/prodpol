@@ -31,10 +31,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Postgres\indices\"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <Content Remove="C:\Users\goste\.nuget\packages\microsoft.fsharplu\0.11.7\contentFiles\any\netstandard2.0\Sysprep.ps1"/>
     </ItemGroup>
 

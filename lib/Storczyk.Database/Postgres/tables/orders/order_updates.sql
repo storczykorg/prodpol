@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS prodpol.order_updates
     created_at  timestamp without time zone NOT NULL DEFAULT now(),
     employee_id bigint                      NOT NULL,
     state       integer                     NOT NULL,
+    notes        text,
     PRIMARY KEY (update_id)
 );
 

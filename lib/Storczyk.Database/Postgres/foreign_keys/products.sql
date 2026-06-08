@@ -29,7 +29,3 @@ CALL prodpol.add_constraint(
         'prodpol.products',
         'CK_products_available_amount',
         'check ( available_amount >= 0 )');
-CALL prodpol.add_constraint(
-        'prodpol.products',
-        'CK_products_last_modified_at',
-        'check ( last_modified_at >= created_at )');
