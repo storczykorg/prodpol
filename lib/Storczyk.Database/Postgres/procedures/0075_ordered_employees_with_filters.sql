@@ -1,8 +1,6 @@
 CREATE OR REPLACE FUNCTION prodpol.ordered_employees(
     _ordering_key prodpol.employee_ordering_keys,
     _asc boolean = TRUE,
-    _cursor_id bigint = null,
-    _limit int = 20,
     _fullname varchar default null,
     _email varchar default null,
     _phone_number varchar default null,
@@ -19,8 +17,7 @@ BEGIN
                                                 _fullname::varchar,
                                                 _email::varchar,
                                                 _phone_number::varchar,
-                                                _role_names::varchar array,
-                                                _cursor_id::bigint
+                                                _role_names::varchar array
                                         ))
         SELECT *
         FROM filtered_employees
@@ -43,8 +40,6 @@ BEGIN
                              WHEN 'employee_role_name' THEN (role_name, employee_id)
                              ELSE (employee_id, employee_id)
                              END
-                     END DESC NULLS LAST
-
-        LIMIT _limit;
+                     END DESC NULLS LAST;
 END;
 $$;

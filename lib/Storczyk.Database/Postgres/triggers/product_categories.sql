@@ -45,12 +45,6 @@ BEGIN
 END;
 $$;
 
-alter function update_product_category_ancestry() owner to storczyk;
-
-
-
-alter table prodpol.product_categories
-    owner to storczyk;
 drop trigger IF EXISTS trg_product_categories_ancestry on prodpol.product_categories;
 create trigger trg_product_categories_ancestry
     after insert or update

@@ -1,7 +1,9 @@
 <Solution>
     <Folder Name="/lib/">
         <Project Path="lib/Storczyk.Prodpol.Core/Storczyk.Prodpol.Core.fsproj" />
+        <Project Path="lib/Storczyk.Async/Storczyk.Async.fsproj" />
         <Project Path="lib/Storczyk.Database/Storczyk.Database.csproj" />
+        <Project Path="lib/Storczyk.Prodpol.Data/Storczyk.Prodpol.Data.fsproj" />
     </Folder>
     <Folder Name="/src/">
         <Project Path="src/Storczyk.AppHost/Storczyk.AppHost.csproj" />

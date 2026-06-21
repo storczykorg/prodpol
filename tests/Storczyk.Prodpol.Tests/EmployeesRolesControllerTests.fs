@@ -1,16 +1,15 @@
 module Storczyk.Prodpol.Tests.EmployeesRolesControllerTests
 
-open System
 open NUnit.Framework
 open Moq
 open Microsoft.Extensions.Logging
 open Microsoft.AspNetCore.Mvc
 open FSharp.Control
 open System.Threading
+open Storczyk.Async
 open Storczyk.Prodpol.Controllers.Data
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
-open Storczyk.Prodpol.Core.Utils.AsyncResult
 
 [<Test>]
 let ``GetAll returns Ok with roles`` () =
@@ -32,7 +31,7 @@ let ``GetAll returns Ok with roles`` () =
     let controller: EmployeesRolesController = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
     // Act
-    let result: ActionResult = controller.GetAll(CancellationToken.None) |> Async.RunSynchronously
+    let result: ActionResult = controller.GetAll(CancellationToken.None).Result
 
     // Assert
     match result with
@@ -57,7 +56,7 @@ let ``GetById returns NotFound when repository returns NotFound`` () =
     let controller: EmployeesRolesController = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
     // Act
-    let result: ActionResult = controller.GetById("missing") |> Async.RunSynchronously
+    let result: ActionResult = controller.GetById("missing").Result
 
     // Assert
     Assert.That(result, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult")

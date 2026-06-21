@@ -5,7 +5,49 @@ open System.ComponentModel.DataAnnotations
 open LinqToDB.Mapping
 open Storczyk.Prodpol.Core.Utils
 
-[<Serializable>]
+[<Serializable; ProdpolModel>]
+
+type ReadonlyEmployee() =
+    [<Column("employee_id")>]
+    [<Required>]
+    [<Identity>]
+    member val Id = -1L with get
+
+    [<Column("role_id")>]
+    member val RoleId: int option = None with get
+
+    [<Column("email")>]
+    [<RegularExpression("""^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
+    [<Required>]
+    member val Email = "" with get
+
+    [<Column("name_first")>]
+    [<RegularExpression("^(\w+\s?)+$")>]
+    [<Required>]
+    member val NameFirst = "" with get
+
+    [<Column("name_last")>]
+    [<RegularExpression("^(\w+\s?)+$")>]
+    [<Required>]
+    member val NameLast = "" with get
+
+    [<Column("phone_number")>]
+    [<MinLength(1)>]
+    [<RegularExpression("^\+?[1-9][0-9]{7,14}$")>]
+    [<Required>]
+    member val PhoneNumber = "" with get
+
+    [<Column("password_hash")>]
+    member val PasswordHash: string option = None with get
+
+    [<Column("created_at")>]
+    member val CreatedAt = DateTime.UtcNow with get
+
+    [<Column("enabled")>]
+    member val Enabled = false with get
+
+    override this.ToString() = Json.readableJson this
+[<Serializable; ProdpolModel>]
 [<Table("prodpol.employees")>]
 type Employee() =
     [<Column("employee_id")>]
@@ -53,7 +95,7 @@ type Employee() =
 /// Use only on readonly operations
 /// </summary>
 [<Table("prodpol.employees")>]
-[<Serializable>]
+[<Serializable; ProdpolModel>]
 type EmployeeRead() =
     inherit Employee()
 

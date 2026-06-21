@@ -1,15 +1,28 @@
 ﻿namespace Storczyk.Prodpol.Core.Services
 
 open System
+open System.Collections.Generic
+open System.Threading.Tasks
 open Dapper
 open FSharp.Control
+open Microsoft.AspNetCore.Identity
+open Microsoft.AspNetCore.Mvc
 open Npgsql
+open Storczyk.Async
+open Storczyk.Async.AsyncResult
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Utils
-open Storczyk.Prodpol.Core.Utils.AsyncResult
 
+[<RegisterAsTransient(typeof<IEmployeesRepository>)>]
+[<RegisterAsTransient(typeof<IEmployeesReadRepository>)>]
 type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
+    let [<Literal>] countByEmailSql =
+        """
+        SELECT count(*) FROM prodpol.employees_with_roles
+        where LOWER(normalized_email) = LOWER((@email)::text)
+        or LOWER(email) = LOWER(@email);
+        """
     interface IEmployeesRepository with
         /// Adds a new employee to the repository asynchronously.
         ///
@@ -29,9 +42,25 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
         /// Raises an Exception for invalid insertion counts. Supports asynchronous cancellation via CancellationToken.
         member this.AddAsync(entity) =
             asyncResult {
+                let errors = new List<ValidationErrorDetail>()
+
                 let! ct = Async.CancellationToken
                 use! conn = dataSource.OpenConnectionAsync(ct)
                 use! scope = conn.BeginTransactionAsync(ct)
+
+                let! simmilarEmails: int =
+                    (wrapTask(
+                    conn.ExecuteScalarAsync<int>(
+                        countByEmailSql,
+                        {| email = entity.Email.ToLower() |})))
+
+                if(simmilarEmails > 0) then
+                    errors.Add({ Field = "Email"; Issue = "Email is already present"})
+
+
+                if(errors.Count > 0) then
+                    do! scope.RollbackAsync()
+                    return! Error (DatabaseError.ValidationErrors errors)
 
                 let sql =
                     // language=postgresql
@@ -51,7 +80,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                                nameLast = entity.NameLast
                                email = entity.Email
                                phoneNumber = entity.PhoneNumber
-                               passwordHash = entity.PasswordHash |}
+                               passwordHash = entity.PasswordHash |> Option.defaultValue null |}
                         ))
 
                 match result with
@@ -75,7 +104,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                     conn.ExecuteAsync(
                         // language=postgresql
                         "DELETE FROM prodpol.employees
-                        WHERE employee_id = @id;",
+                        WHERE employee_id = (@id);",
                         {| id = key |}
                     )
                 with
@@ -132,15 +161,36 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 return! emp
             }
 
-        member this.UpdateAsync (key: int64) (entity: Employee) : AsyncResult<unit, DatabaseError> =
-            async {
+        member this.UpdateAsync (key: int64) (
+            entity: Employee) : AsyncResult<unit> =
+            asyncResult {
+                let errors = new List<ValidationErrorDetail>()
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
-                use! scope = conn.BeginTransactionAsync(ct)
+                use! scope: NpgsqlTransaction = conn.BeginTransactionAsync(ct)
+
+                let! simmilarEmails: int =
+                    (wrapTask(
+                    conn.ExecuteScalarAsync<int>(
+                        """
+                        SELECT count(*) from prodpol.employees_with_roles
+                        where lower(normalized_email) = lower(@email::TEXT)
+                        AND employee_id <> (@key)::bigint;
+                        """,
+                        {| email = entity.Email.ToLower()
+                           key = key |})))
+
+                if(simmilarEmails > 0) then
+                    errors.Add({ Field = "Email"; Issue = "Email is already present"})
+
+
+                if(errors.Count > 0) then
+                    do! scope.RollbackAsync()
+                    return! Error (DatabaseError.ValidationErrors errors)
 
                 match!
-                    conn.ExecuteAsync(
+                    wrapTask(conn.ExecuteAsync(
                         // language=postgresql
                         "UPDATE prodpol.employees 
                         SET 
@@ -157,19 +207,18 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                            nameLast = entity.NameLast
                            email = entity.Email
                            phoneNumber = entity.PhoneNumber
-                           passwordHash = entity.PasswordHash |}
-                    )
+                           passwordHash = entity.PasswordHash |> Option.defaultValue null |}
+                    ))
                 with
                 | 0 ->
                     do! scope.RollbackAsync()
-                    return Error DatabaseError.NotFound
+                    return! Error DatabaseError.NotFound
                 | 1 ->
                     do! scope.CommitAsync()
-                    return Ok()
                 | _ ->
                     do! scope.RollbackAsync()
 
-                    return
+                    return!
                         Error(
                             DatabaseError.UnknownException(
                                 InvalidOperationException

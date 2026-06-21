@@ -1,10 +1,9 @@
-namespace Storczyk.Prodpol.Core.Utils
+namespace Storczyk.Async
 
 open System
 open System.Threading.Tasks
-open Storczyk.Prodpol.Core.Data
-open Storczyk.Prodpol.Core.Utils
-open Storczyk.Prodpol.Core.Utils.AsyncResult
+open Storczyk.Async.AsyncResult
+open Storczyk.Async.DatabaseError
 
 [<AutoOpen>]
 module AsyncResultCE =
@@ -53,7 +52,11 @@ module AsyncResultCE =
         member inline _.Bind<'a, 'b>(a: Result<'a, DatabaseError>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
             match a with
             | Error e -> async { return Error e }
-            | Ok o -> f o
+            | Ok o ->
+                try
+                    f o
+                with
+                | e -> async { return DatabaseError.mapError e }
 
         member inline _.Bind<'a, 'b>(a: Task<'a>, f: 'a -> AsyncResult<'b>) : AsyncResult<'b> =
             let x: AsyncResult<'a> = wrapTask a
@@ -65,12 +68,18 @@ module AsyncResultCE =
             bindAsync f x
 
         /// TryWith to handle exceptions inside the computation expression.
-        member _.TryWith(body: unit -> AsyncResult<'a>, handler: exn -> AsyncResult<'a>) : AsyncResult<'a> =
+        // member _.TryWith(body: unit -> AsyncResult<'a>, handler: exn -> AsyncResult<'a>) : AsyncResult<'a> =
+        //     async {
+        //         try
+        //             return! body ()
+        //         with ex ->
+        //             return! handler ex
+        //     }
+        member _.TryWith(body: AsyncResult<'a>, handler: exn -> AsyncResult<'a>) : AsyncResult<'a> =
             async {
-                try
-                    return! body ()
-                with ex ->
-                    return! handler ex
+                match! body with
+                | Ok ok -> return Ok(ok)
+                | Error e -> return! handler(extractException e)
             }
 
         /// TryFinally to run compensation after the body, even on exceptions.

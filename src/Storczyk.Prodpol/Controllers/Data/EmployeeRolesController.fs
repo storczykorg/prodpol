@@ -1,12 +1,13 @@
 ﻿namespace Storczyk.Prodpol.Controllers.Data
 
 open System.Threading
+open System.Threading.Tasks
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
+open Storczyk.Async.AsyncResult
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
-open Storczyk.Prodpol.Core.Utils.AsyncResult
 open Storczyk.Prodpol.Utils
 
 [<ApiController>]
@@ -32,7 +33,7 @@ type EmployeesRolesController(roles: IEmployeeRoleRepository, logger: ILogger<Em
 
     [<HttpPatch>]
     [<Route("{id:long}")>]
-    member this.Update(id: string, [<FromBody>] update: JsonPatchDocument<EmployeeRole>) : Async<ActionResult> =
+    member this.Update(id: string, [<FromBody>] update: JsonPatchDocument<EmployeeRole>) : Task<ActionResult> =
         roles.GetByIdAsync(id)
         |> (bind (fun emp ->
             update.ApplyTo emp
@@ -42,7 +43,7 @@ type EmployeesRolesController(roles: IEmployeeRoleRepository, logger: ILogger<Em
 
     [<HttpDelete>]
     [<Route("{id:long}")>]
-    member this.Delete(id: string) : Async<ActionResult> =
+    member this.Delete(id: string) : Task<ActionResult> =
         roles.DeleteAsync(id) |> this.mapAsyncResult
 
     [<HttpPost>]

@@ -15,7 +15,6 @@ open LinqToDB.Mapping
 open System
 
 module ProgramMigration =
-
     let applyUpgrade (app: WebApplication) : bool =
         use scope = app.Services.CreateScope()
         let upgrader = scope.ServiceProvider.GetRequiredService<PostgresUpgrader>()
@@ -49,17 +48,3 @@ module ProgramMigration =
             false
         else
             true
-    let mapProperty(_type: Type) (name: string) : PropertyInfo =
-        _type.GetProperties().FirstOrDefault(
-            fun prop ->
-                prop.GetCustomAttributes<ColumnAttribute>(true)
-                    .Any(fun attr -> attr.Name = name)
-                )
-    let addTypeMapping<'T>() =
-        SqlMapper.SetTypeMap(
-            typeof<'T>,
-            CustomPropertyTypeMap(
-                typeof<'T>,
-                mapProperty
-                )
-            )

@@ -7,10 +7,10 @@ open Microsoft.Extensions.Logging
 open Microsoft.AspNetCore.Mvc
 open FSharp.Control
 open System.Threading
+open Storczyk.Async
 open Storczyk.Prodpol.Controllers.Data
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
-open Storczyk.Prodpol.Core.Utils.AsyncResult
 
 [<SetUp>]
 let Setup () = ()
@@ -33,7 +33,7 @@ let Test1 () =
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
     let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
-    let result = controller.GetAll(CancellationToken.None) |> Async.RunSynchronously
+    let result = controller.GetAll(CancellationToken.None).Result
     match result with
     | :? OkObjectResult as ok ->
         let value = ok.Value :?> AsyncSeq<EmployeeRole>
@@ -49,7 +49,7 @@ let Test1 () =
         |> ignore
 
     let controller2 = EmployeesRolesController(repoMock2.Object, loggerMock.Object)
-    let result2 = controller2.GetById("missing") |> Async.RunSynchronously
+    let result2 = controller2.GetById("missing").Result
     Assert.That(result2, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult for GetById")
 
 [<Test>]
@@ -68,8 +68,7 @@ let GetAll_ReturnsOkWithRoles () =
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
     let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
-    let result = controller.GetAll(CancellationToken.None) |> Async.RunSynchronously
-
+    let result = controller.GetAll(CancellationToken.None).Result
     match result with
     | :? OkObjectResult as ok ->
         let value = ok.Value :?> AsyncSeq<EmployeeRole>
@@ -89,7 +88,7 @@ let GetById_ReturnsNotFound () =
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
     let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
-    let result = controller.GetById("missing") |> Async.RunSynchronously
+    let result = controller.GetById("missing").Result
     Assert.That(result, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult")
 
 [<TestFixture>]
@@ -113,7 +112,7 @@ type EmployeesRolesControllerFixture() =
         let loggerMock = Mock<ILogger<EmployeesRolesController>>()
         let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
-        let result = controller.GetAll(CancellationToken.None) |> Async.RunSynchronously
+        let result = controller.GetAll(CancellationToken.None).Result
 
         match result with
         | :? OkObjectResult as ok ->
@@ -133,7 +132,7 @@ type EmployeesRolesControllerFixture() =
         let loggerMock = Mock<ILogger<EmployeesRolesController>>()
         let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
 
-        let result = controller.GetById("missing") |> Async.RunSynchronously
+        let result = controller.GetById("missing").Result
 
         match result with
         | :? NotFoundResult -> Assert.Pass()

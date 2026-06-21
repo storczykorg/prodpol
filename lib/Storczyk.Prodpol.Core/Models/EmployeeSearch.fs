@@ -3,6 +3,7 @@ namespace Storczyk.Prodpol.Core.Models
 open System.Runtime.Serialization
 open System.Text.Json.Serialization
 open NpgsqlTypes
+open Storczyk.Prodpol.Core.Utils
 
 /// Represents search options for querying persons, allowing customization of filter criteria,
 /// pagination, and ordering.
@@ -13,7 +14,7 @@ type PersonSearchOption<'TOrder>() =
     member val email: string option = None with get, set
     member val phoneNumber: string option = None with get, set
     member val limit: int = 20 with get, set
-    member val cursor: int64 option = None with get, set
+    member val skip: int = 0 with get, set
     member val orderBy: 'TOrder option = None with get, set
     member val roleNames: string array option = None with get, set
     member val asc: bool = false with get, set

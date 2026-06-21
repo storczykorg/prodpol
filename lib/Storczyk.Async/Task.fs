@@ -1,7 +1,6 @@
-﻿namespace Storczyk.Prodpol.Core.Utils
+﻿namespace Storczyk.Async
 
 open System.Threading.Tasks
-open Storczyk.Prodpol.Core.Data
 
 module Task =
     /// Execute a `Task<'T>`-producing function and capture exceptions as `DatabaseError`.

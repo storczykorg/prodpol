@@ -7,11 +7,11 @@ open Microsoft.Extensions.Logging
 open Microsoft.AspNetCore.Mvc
 open FSharp.Control
 open System.Threading
+open Storczyk.Async
 open Storczyk.Prodpol.Controllers.Data
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Services
 open Storczyk.Prodpol.Core.Models
-open Storczyk.Prodpol.Core.Utils.AsyncResult
 
 [<Test>]
 let ``Search returns Ok with results`` () =
@@ -44,8 +44,7 @@ let ``Search returns Ok with results`` () =
 
     // Act
     let actionResult: ActionResult =
-        controller.Search(CancellationToken.None, repoMock.Object, EmployeeSearchOption())
-        |> Async.RunSynchronously
+        controller.Search(CancellationToken.None, repoMock.Object, EmployeeSearchOption()).Result
 
     // Assert
     match actionResult with
@@ -80,8 +79,7 @@ let ``Search returns NotFound when repository returns NotFound`` () =
 
     // Act
     let actionResult: ActionResult =
-        controller.Search(CancellationToken.None, repoMock.Object, EmployeeSearchOption())
-        |> Async.RunSynchronously
+        controller.Search(CancellationToken.None, repoMock.Object, EmployeeSearchOption()).Result
 
     // Assert
     Assert.That(actionResult, Is.TypeOf<NotFoundResult>())

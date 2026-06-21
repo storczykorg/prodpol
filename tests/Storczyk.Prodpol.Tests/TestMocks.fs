@@ -4,9 +4,9 @@ open Moq
 open Microsoft.Extensions.Logging
 open FSharp.Control
 open System.Threading
+open Storczyk.Async
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Data
-open Storczyk.Prodpol.Core.Utils.AsyncResult
 
 let createRole id name =
     let r = EmployeeRole()

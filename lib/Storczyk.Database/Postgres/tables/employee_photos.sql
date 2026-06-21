@@ -4,20 +4,12 @@
  * For a copy, see <https://opensource.org/licenses/MIT>.
  */
 
-CREATE TABLE IF NOT EXISTS "prodpol"."employee_photos"
+create table if not exists "prodpol"."employee_photos"
 (
-    employee_id
-    bigint
-    NOT
-    NULL,
-    mime_type
-    character
-    varying
-(
-    128
-) NOT NULL,
-    payload BYTEA NOT NULL,
-    payload_size integer NOT NULL,
-    PRIMARY KEY (employee_id)
+    employee_id  bigint                 not null,
+    mime_type    character varying(128) not null,
+    payload      BYTEA                  not null,
+    payload_size integer                not null,
+    primary key (employee_id)
 );
 

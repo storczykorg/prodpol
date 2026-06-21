@@ -3,12 +3,14 @@ namespace Storczyk.Prodpol.Core.Services
 open Dapper
 open FSharp.Control
 open Npgsql
+open Storczyk.Async
+open Storczyk.Async.AsyncResult
+open Storczyk.Async.Task
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Utils
-open Storczyk.Prodpol.Core.Utils.AsyncResult
-open Storczyk.Prodpol.Core.Utils.Task
 
+[<RegisterAsTransient(typeof<IReadRepository<string, EmployeeRoleRead>>)>]
 type PgEmployeeRoleReadRepository(dataSource: NpgsqlDataSource) =
     interface IReadRepository<string, EmployeeRoleRead> with
         member this.GetAllAsync(token) =

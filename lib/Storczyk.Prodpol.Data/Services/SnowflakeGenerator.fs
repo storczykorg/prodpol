@@ -2,6 +2,7 @@
 
 open System
 open System.Threading
+open Storczyk.Prodpol.Core.Utils
 
 type ISnowflakeGenerator =
     interface
@@ -23,6 +24,7 @@ module Snowflake =
 // - instance's id * 256  |
 // - counter              | 16 bits
 
+[<RegisterAsTransient(typeof<ISnowflakeGenerator>)>]
 type SnowflakeGenerator(options: SnowflakeOptions) =
     member val counter = 0u
 

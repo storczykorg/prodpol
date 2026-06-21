@@ -3,6 +3,7 @@ module Storczyk.Prodpol.Tests.TaskUtilsTests
 open System
 open NUnit.Framework
 open System.Threading.Tasks
+open Storczyk.Async
 open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Data
 
@@ -25,7 +26,7 @@ let ``Task.wrap maps OperationCanceledException to OperationCancelled error`` ()
         |> Async.RunSynchronously
 
     match t with
-    | Error DatabaseError.OperationCancelled -> Assert.Pass()
+    | Error (OperationCancelled e) -> Assert.Pass()
     | _ -> Assert.Fail("Expected OperationCancelled error")
 
 [<Test>]
@@ -38,7 +39,7 @@ let ``Task.wrap maps TimeoutException to ConnectionTimeout error`` () =
         |> Async.RunSynchronously
 
     match t with
-    | Error DatabaseError.ConnectionTimeout -> Assert.Pass()
+    | Error (DatabaseError.ConnectionTimeout e) -> Assert.Pass()
     | _ -> Assert.Fail("Expected ConnectionTimeout error")
 
 [<Test>]
@@ -67,7 +68,7 @@ let ``Async.wrap maps TimeoutException to ConnectionTimeout`` () =
         |> Async.RunSynchronously
 
     match r with
-    | Error DatabaseError.ConnectionTimeout -> Assert.Pass()
+    | Error (DatabaseError.ConnectionTimeout e) -> Assert.Pass()
     | _ -> Assert.Fail("Expected ConnectionTimeout error")
 
 [<Test>]

@@ -7,18 +7,19 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.3.2">
 
     <ItemGroup>
-        <ProjectReference Include="..\Storczyk.Prodpol\Storczyk.Prodpol.fsproj" AspireProjectMetadataTypeName="StorczykProdpol"/>
-        <ProjectReference Include="..\Storczyk.Worker\Storczyk.Worker.fsproj" AspireProjectMetadataTypeName="StorczykWorker"/>
+        <ProjectReference Include="..\Storczyk.Prodpol\Storczyk.Prodpol.fsproj" AspireProjectMetadataTypeName="StorczykProdpol" />
+        <ProjectReference Include="..\Storczyk.Worker\Storczyk.Worker.fsproj" AspireProjectMetadataTypeName="StorczykWorker" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.AppHost" Version="13.3.3" />
         <PackageReference Include="Aspire.Hosting.Azure.Functions" Version="13.3.3" />
-        <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.5.2"/>
+        <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.5.2" />
         <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.3.3" />
         <PackageReference Include="Aspire.Hosting.Redis" Version="13.3.3" />
-        <PackageReference Include="CommunityToolkit.Aspire.Hosting.NodeJS.Extensions" Version="9.9.0"/>
+        <PackageReference Include="CommunityToolkit.Aspire.Hosting.NodeJS.Extensions" Version="9.9.0" />
         <PackageReference Include="FSharp.Core" Version="10.1.300" />
+        <PackageReference Include="MessagePack" Version="2.5.301" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
     </ItemGroup>
 

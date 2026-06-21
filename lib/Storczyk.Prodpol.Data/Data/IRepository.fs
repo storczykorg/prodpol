@@ -2,6 +2,7 @@
 
 open System.Threading
 open FSharp.Control
+open Storczyk.Async
 open Storczyk.Prodpol.Core.Models
 
 type IRepository<'TKey, 'TValue> =

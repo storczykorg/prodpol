@@ -38,7 +38,6 @@ AS $$
 DECLARE
     _p_val text;
 BEGIN
-    -- Only fetch previous value if we have a cursor AND we aren't sorting strictly by ID
     IF _cursor IS NOT NULL AND _ordering_key <> 'customer_id' THEN
         SELECT CASE _ordering_key
                    WHEN 'customer_full_name' THEN normalized_name
@@ -54,7 +53,6 @@ BEGIN
         SELECT *
         FROM prodpol.customers_with_roles
         WHERE
-          -- Keyset Pagination Logic: Ignore entirely if cursor is NULL (First Page)
             (
                 _cursor IS NULL OR
                 CASE WHEN _asc THEN
@@ -74,11 +72,10 @@ BEGIN
                     END
                 )
 
-          -- Role Array Filtering Logic
+          -- Filtrowanie ról
           AND (_role_ids = '{}' OR role = ANY(_role_ids))
           AND (_roles = '{}' OR role_name = ANY(_roles))
 
-          -- Global Filtering Logic
           AND (
             _search_term IS NULL
                 OR normalized_name LIKE '%' || lower(_search_term) || '%'
@@ -86,7 +83,6 @@ BEGIN
                 OR phone_number ILIKE '%' || _search_term || '%'
             )
 
-          -- Individual Column Filtering Logic
           AND (_email_search IS NULL OR normalized_email LIKE '%' || lower(_email_search) || '%')
           AND (_name_search IS NULL OR normalized_name LIKE '%' || lower(_name_search) || '%')
           AND (_phone_search IS NULL OR phone_number ILIKE '%' || _phone_search || '%')
@@ -107,7 +103,6 @@ BEGIN
                          WHEN 'customer_phone_number' THEN phone_number
                          END
                 END DESC,
-            -- Tie-breaker
             CASE WHEN _asc THEN customer_id END ASC,
             CASE WHEN NOT _asc THEN customer_id END DESC
         LIMIT _limit;

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS prodpol.order_updates
     update_id   bigserial                   NOT NULL,
     order_id    bigint                      NOT NULL,
     created_at  timestamp without time zone NOT NULL DEFAULT now(),
-    employee_id bigint                      NOT NULL,
+    employee_id bigint                      NULL,
     state       integer                     NOT NULL,
     notes        text,
     PRIMARY KEY (update_id)

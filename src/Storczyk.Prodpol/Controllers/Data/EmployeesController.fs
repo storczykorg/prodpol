@@ -2,9 +2,14 @@
 
 open System
 open System.Threading
+open System.Threading.Tasks
+open System.Transactions
+open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson
+open Microsoft.AspNetCore.JsonPatch.SystemTextJson.Exceptions
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
+open Storczyk.Async
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
@@ -60,32 +65,46 @@ type EmployeesController
             return emp
         } |> this.mapAsyncResult
 
-    [<HttpPatch>]
-    [<Route("{id:long}")>]
-    member this.Update(id: int64, [<FromBody>] update: JsonPatchDocument<Employee>) : Async<ActionResult> =
+    [<HttpPatch; Route("{id:long}")>]
+    [<Consumes("text/json")>]
+    [<ProducesResponseType(statusCode = 200, Type = typeof<EmployeeRead>)>]
+    member this.Update(id: int64, [<FromBody>] update: JsonPatchDocument<Employee>) : Task<ActionResult> =
         (asyncResult {
             let! emp: Employee = employees.GetByIdAsync(id)
-            do (update.ApplyTo emp)
+
+            do! this.ApplyPatch update emp
             do! this.ValidateObject emp
             do! employees.UpdateAsync id emp
+
+
             return emp
+
+
         }: AsyncResult<Employee>)
         |> this.mapAsyncResult
 
     [<HttpDelete>]
     [<Route("{id:long}")>]
-    member this.Delete(id: int64) : Async<ActionResult> =
+    member this.Delete(id: int64) : Task<ActionResult> =
         employees.DeleteAsync(id) |> this.mapAsyncResult
 
-    [<HttpPost>]
-    member this.Create([<FromBody>] entity: EmployeeCreate) =
+    [<HttpPost; ProducesResponseType(typeof<EmployeeRead>, 200)>]
+    member this.Create([<FromBody>] entity: EmployeeCreate,
+                       passwordHasher: IPasswordHasher<Employee>) =
         let time = DateTime.UtcNow
         let id: int64 = snowflakes.GetSnowflake(time)
 
         let emp = entity.BuildEmployee(id, time)
 
+        if (entity.passwordNotEmpty()) then
+            emp.PasswordHash <-
+                Some(passwordHasher
+                         .HashPassword(emp, (entity.Password |> defaultIfNull ""))
+                         )
+
         (asyncResult {
             do! this.ValidateObject emp |> Result.map ignore
             do! employees.AddAsync emp
-        }: AsyncResult<unit>)
+            return! employeesRead.GetByIdAsync(id)
+        }: AsyncResult<EmployeeRead>)
         |> this.mapAsyncResult

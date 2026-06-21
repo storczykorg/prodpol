@@ -57,7 +57,7 @@ let ``GET /api/data/employees/26 returns mocked employee`` () =
             .BuildTest(
                 [||],
                 fun s ->
-                    s.AddNullRepositories().AddSingleton<IEmployeesReadRepository>(mockRepo.Object)
+                    s.AddSingleton<IEmployeesReadRepository>(mockRepo.Object)
                     |> ignore
                     ()
             )

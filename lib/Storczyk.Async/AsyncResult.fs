@@ -1,9 +1,9 @@
-namespace Storczyk.Prodpol.Core.Utils
+namespace Storczyk.Async
 
 open System.Collections.Generic
 open System.Runtime.CompilerServices
 open System.Threading.Tasks
-open Storczyk.Prodpol.Core.Data
+open Storczyk.Async.DatabaseError
 
 /// Represents an asynchronous computation that may succeed with a value of
 /// type `'a` or fail with an error of type `'e`.
@@ -45,7 +45,13 @@ module AsyncResult =
     let bindAsync (f: 'a -> AsyncResult<'d, 'e>) (a: AsyncResult<'a, 'e>) : AsyncResult<'d, 'e> =
         async {
             match! a with
-            | Ok a -> return! f a
+            | Ok a ->
+                try
+                    let! x = f a
+                    return x
+                with
+                | e -> return DatabaseError.mapError e
+
             | Error e -> return Error e
         }
 
@@ -74,6 +80,14 @@ module AsyncResult =
             | Ok a -> return a
             | Error b -> return b
         }
+    let extractOrThrow<'a> (a: AsyncResult<'a, DatabaseError>): Async<'a> =
+        async {
+            let! a: Result<'a, DatabaseError> = a
+            match a with
+            | Ok b -> return b
+            | Error e -> return (throwError e)
+        }
+
 
     [<Extension>]
     let AsAsyncEnumerable (ty: IEnumerable<'a>) =
