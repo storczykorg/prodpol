@@ -30,8 +30,10 @@ let Test1 () =
         .Returns(fun (_: CancellationToken) -> async { return Ok(asyncSeq { yield role }) })
         |> ignore
 
+    let readRepoMock = Mock<IEmployeeRoleReadRepository>()
+
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-    let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+    let controller = EmployeesRolesController(readRepoMock.Object, repoMock.Object, loggerMock.Object)
 
     let result = controller.GetAll(CancellationToken.None).Result
     match result with
@@ -48,7 +50,8 @@ let Test1 () =
         .Returns(fun (_: string) -> async { return Error DatabaseError.NotFound })
         |> ignore
 
-    let controller2 = EmployeesRolesController(repoMock2.Object, loggerMock.Object)
+    let readRepoMock2 = Mock<IEmployeeRoleReadRepository>()
+    let controller2 = EmployeesRolesController(readRepoMock2.Object, repoMock2.Object, loggerMock.Object)
     let result2 = controller2.GetById("missing").Result
     Assert.That(result2, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult for GetById")
 
@@ -66,7 +69,7 @@ let GetAll_ReturnsOkWithRoles () =
         |> ignore
 
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-    let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+    let controller = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
     let result = controller.GetAll(CancellationToken.None).Result
     match result with
@@ -86,7 +89,7 @@ let GetById_ReturnsNotFound () =
         |> ignore
 
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-    let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+    let controller = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
     let result = controller.GetById("missing").Result
     Assert.That(result, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult")
@@ -110,7 +113,7 @@ type EmployeesRolesControllerFixture() =
             |> ignore
 
         let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-        let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+        let controller = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
         let result = controller.GetAll(CancellationToken.None).Result
 
@@ -130,7 +133,7 @@ type EmployeesRolesControllerFixture() =
             |> ignore
 
         let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-        let controller = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+        let controller = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
         let result = controller.GetById("missing").Result
 

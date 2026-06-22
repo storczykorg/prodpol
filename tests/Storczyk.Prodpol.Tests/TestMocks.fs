@@ -1,12 +1,17 @@
 module Storczyk.Prodpol.Tests.TestMocks
 
+open System
 open Moq
 open Microsoft.Extensions.Logging
 open FSharp.Control
 open System.Threading
+open Microsoft.AspNetCore.Identity
+open Microsoft.AspNetCore.Mvc.ModelBinding.Validation
+open Microsoft.AspNetCore.Mvc
 open Storczyk.Async
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Data
+open Storczyk.Prodpol.Core.Services
 
 let createRole id name =
     let r = EmployeeRole()
@@ -36,3 +41,67 @@ let mockRoleRepoGetByIdNotFound () =
     repo
 
 let mockLogger<'T> () = Mock<ILogger<'T>>()
+
+let mockSnowflakeGenerator (id: int64) =
+    let mock = Mock<ISnowflakeGenerator>()
+    mock.Setup(fun m -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(id) |> ignore
+    mock
+
+let mockEmployeeRepoAddAsync (result: AsyncResult<unit>) =
+    let mock = Mock<IEmployeesRepository>()
+    mock
+        .Setup(fun m -> m.AddAsync(It.IsAny<Employee>()))
+        .Returns(fun (_: Employee) -> result)
+    |> ignore
+    mock
+
+let mockEmployeeRepoUpdateAsync (result: AsyncResult<unit>) =
+    let mock = Mock<IEmployeesRepository>()
+    mock
+        .Setup(fun m -> m.UpdateAsync(It.IsAny<int64>())(It.IsAny<Employee>()))
+        .Returns(fun (_: int64) (_: Employee) -> result)
+    |> ignore
+    mock
+
+let mockEmployeeRepoGetById (emp: Employee) =
+    let mock = Mock<IEmployeesRepository>()
+    mock
+        .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
+        .Returns(fun (_: int64) -> async { return Ok emp })
+    |> ignore
+    mock
+
+let mockEmployeeRepoGetByIdNotFound () =
+    let mock = Mock<IEmployeesRepository>()
+    mock
+        .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
+        .Returns(fun (_: int64) -> async { return Error DatabaseError.NotFound })
+    |> ignore
+    mock
+
+let mockEmployeeReadRepoGetById (emp: EmployeeRead) =
+    let mock = Mock<IEmployeesReadRepository>()
+    mock
+        .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
+        .Returns(fun (_: int64) -> async { return Ok emp })
+    |> ignore
+    mock
+
+let mockPasswordHasher () =
+    let mock = Mock<IPasswordHasher<Employee>>()
+    mock
+        .Setup(fun m -> m.HashPassword(It.IsAny<Employee>(), It.IsAny<string>()))
+        .Returns("hashed-password-test")
+    |> ignore
+    mock
+
+let setupControllerValidation (controller: ControllerBase) =
+    let validatorMock = Mock<IObjectModelValidator>()
+    validatorMock
+        .Setup(fun v -> v.Validate(
+            It.IsAny<ActionContext>(),
+            It.IsAny<ValidationStateDictionary>(),
+            It.IsAny<string>(),
+            It.IsAny<Object>()))
+    |> ignore
+    controller.ObjectValidator <- validatorMock.Object

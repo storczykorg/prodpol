@@ -17,7 +17,7 @@ type ReadonlyEmployee() =
     member val RoleId: int option = None with get
 
     [<Column("email")>]
-    [<RegularExpression("""^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
+    [<RegularExpression("""^(([a-zA-Z0-9\-_.+/]+)|("([+.a-zA-Z0-9_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
     [<Required>]
     member val Email = "" with get
 
@@ -59,7 +59,7 @@ type Employee() =
     member val RoleId: int option = None with get, set
 
     [<Column("email")>]
-    [<RegularExpression("""^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
+    [<RegularExpression("""^(([a-zA-Z0-9\-_.+/]+)|("([+.a-zA-Z0-9_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
     [<Required>]
     member val Email = "" with get, set
 

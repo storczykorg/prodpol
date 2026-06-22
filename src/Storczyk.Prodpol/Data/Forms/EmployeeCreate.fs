@@ -6,7 +6,7 @@ open Storczyk.Prodpol.Core.Models
 
 [<Serializable>]
 type EmployeeCreate() =
-    [<RegularExpression("""^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
+    [<RegularExpression("""^(([a-zA-Z0-9\-_.+/]+)|("([+.a-zA-Z0-9_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$""")>]
     [<Required>]
     member val Email = "" with get, set
 

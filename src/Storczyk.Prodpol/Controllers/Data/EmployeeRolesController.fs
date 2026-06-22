@@ -5,6 +5,7 @@ open System.Threading.Tasks
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
+open Storczyk.Async
 open Storczyk.Async.AsyncResult
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
@@ -12,7 +13,10 @@ open Storczyk.Prodpol.Utils
 
 [<ApiController>]
 [<Route("api/data/employees/roles/")>]
-type EmployeesRolesController(roles: IEmployeeRoleRepository, logger: ILogger<EmployeesRolesController>) =
+type EmployeesRolesController(
+                              readRoles: IEmployeeRoleReadRepository,
+                              roles: IEmployeeRoleRepository,
+                              logger: ILogger<EmployeesRolesController>) =
     inherit LoggedController()
     override this.Logger = logger
 
@@ -21,10 +25,12 @@ type EmployeesRolesController(roles: IEmployeeRoleRepository, logger: ILogger<Em
     member this.GetCount(token: CancellationToken) =
         roles.CountAsync(token) |> this.mapAsyncResult
 
-    [<HttpGet>]
-    [<Route("all")>]
+    [<HttpGet; Route("all")>]
+    [<ProducesResponseType(typeof<EmployeeRoleRead[]>, 200)>]
     member this.GetAll(token: CancellationToken) =
-        roles.GetAllAsync(token) |> this.mapAsyncResult
+        asyncResult {
+            return! readRoles.GetAllAsync(token)
+        } |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("{id:long}")>]

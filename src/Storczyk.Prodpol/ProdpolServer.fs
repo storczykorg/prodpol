@@ -1,29 +1,32 @@
 namespace Storczyk.Prodpol
 
 open System
-open System.Reflection
+open System.Net
 open System.Text.Json.Serialization
-open System.Threading.Tasks
-open Dapper
+open Microsoft.AspNetCore.Authentication
+open Microsoft.AspNetCore.Authentication.Cookies
 open Microsoft.AspNetCore.Builder
+open Microsoft.AspNetCore.DataProtection
+open Microsoft.AspNetCore.DataProtection.KeyManagement.Internal
 open Microsoft.AspNetCore.Identity
+open Microsoft.AspNetCore.Routing
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Npgsql
 open OpenTelemetry
-open OpenTelemetry.Logs
 open OpenTelemetry.Metrics
 open OpenTelemetry.Trace
 open Storczyk.Database.Services
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
-open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Utils.RegisterServiceExtensions
+open Storczyk.Prodpol.Data.Services
+open Storczyk.Prodpol.Data.Services.Identity
 open Storczyk.Prodpol.Utils
 
 type ProdpolServer() =
-    member this.Configure(builder: IHostApplicationBuilder) =
+    member this.Configure(builder: IHostApplicationBuilder): IHostApplicationBuilder =
 
         builder.Configuration.AddUserSecrets() |> ignore
 
@@ -65,10 +68,22 @@ type ProdpolServer() =
             .UseOtlpExporter()
         |> ignore
 
+        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddBearerToken()
+            .AddCookie() |> ignore
+
+        services.AddDataProtection() |> ignore
+        services.AddSingleton<TimeProvider, ProdpolTimeProvider>() |> ignore
+        services.AddTransient<EmployeeSignInManager>() |> ignore
+
         services
             .AddIdentityCore<Employee>()
+            .AddDefaultTokenProviders()
             .AddPasswordValidator<PasswordValidator<Employee>>()
             .AddUserStore<PgEmployeeUserStore>()
+            .AddUserManager<UserManager<Employee>>()
+            .AddSignInManager<EmployeeSignInManager>()
+            .AddApiEndpoints()
         |> ignore
 
         services
@@ -80,11 +95,13 @@ type ProdpolServer() =
 
         ()
 
-    member this.MapApplication(app: WebApplication) =
+    member this.MapApplication(app: WebApplication): WebApplication =
         app.UseRouting() |> ignore
 
         if app.Environment.IsDevelopment() then
             app.MapOpenApi("/openapi/{documentName}.yaml") |> ignore
+
+        app.MapGroup("/api").MapIdentityApi() |> ignore
 
         app.UseAuthorization() |> ignore
         app.MapControllers() |> ignore
@@ -92,7 +109,7 @@ type ProdpolServer() =
         app.UseOpenTelemetryPrometheusScrapingEndpoint() |> ignore
         app
 
-    member this.Build(args: string array) =
+    member this.Build(args: string array): WebApplication =
         let builder = WebApplication.CreateBuilder(args)
 
         this.Configure builder |> ignore
@@ -115,7 +132,7 @@ type ProdpolServer() =
         app.Start()
         app
 
-    member this.WebApplicationBuilder(args: string array) =
+    member this.WebApplicationBuilder(args: string array): WebApplicationBuilder =
         let builder = WebApplication.CreateBuilder(args)
 
         this.Configure builder |> ignore

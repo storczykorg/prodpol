@@ -10,6 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Compile Include="Models\CustomerSpending.fs" />
       <Compile Include="Data\IReadRepository.fs" />
       <Compile Include="Data\IRepository.fs" />
       <Compile Include="Data\IEmployeeSearchRepository.fs" />
@@ -21,7 +22,10 @@
       <Compile Include="Services\Identity\PgEmployeeSearchRepository.fs" />
       <Compile Include="Services\Identity\PgEmployeePhotoRepository.fs" />
       <Compile Include="Services\Identity\PgEmployeeUserStore.fs" />
+      <Compile Include="Services\Identity\EmployeeSignInManager.fs" />
       <Compile Include="Services\Catalog\ProductsRepository.fs" />
+      <Compile Include="Services\Reports\PgCustomerSpendingReadRepository.fs" />
+      <Compile Include="Services\ProdpolTimeProvider.fs" />
     </ItemGroup>
 
 </Project>

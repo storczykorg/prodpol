@@ -10,9 +10,9 @@ open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Utils
 
-[<RegisterAsTransient(typeof<IReadRepository<string, EmployeeRoleRead>>)>]
+[<RegisterAsTransient(typeof<IEmployeeRoleReadRepository>)>]
 type PgEmployeeRoleReadRepository(dataSource: NpgsqlDataSource) =
-    interface IReadRepository<string, EmployeeRoleRead> with
+    interface IEmployeeRoleReadRepository with
         member this.GetAllAsync(token) =
             asyncResult {
                 let! conn = dataSource.OpenConnectionAsync(token)

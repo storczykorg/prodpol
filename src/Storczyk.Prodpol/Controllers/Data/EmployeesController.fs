@@ -1,9 +1,11 @@
 ﻿namespace Storczyk.Prodpol.Controllers.Data
 
 open System
+open System.Linq
 open System.Threading
 open System.Threading.Tasks
 open System.Transactions
+open FSharp.Control
 open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson.Exceptions
@@ -34,11 +36,15 @@ type EmployeesController
     member this.GetAll
         (
             token: CancellationToken,
-            [<FromQuery>] ?name: string,
-            [<FromQuery>] ?sortingKey: string,
-            [<FromQuery>] ?groupId: string
+            [<FromQuery>] ?roleName: string
         ) =
-        employeesRead.GetAllAsync(token) |> this.mapAsyncResult
+        asyncResult {
+            let! result: AsyncSeq<EmployeeRead> = employeesRead.GetAllAsync(token)
+            if (String.IsNullOrEmpty(roleName |> Option.toObj)) then
+                return result
+            else
+                return result.Where(fun x -> String.Compare(x.RoleName |> Option.defaultValue "", roleName |> Option.defaultValue "") = 0)
+        } |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("search")>]

@@ -28,7 +28,7 @@ let ``GetAll returns Ok with roles`` () =
 
     let loggerMock: Mock<ILogger<EmployeesRolesController>> = Mock<ILogger<EmployeesRolesController>>()
 
-    let controller: EmployeesRolesController = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+    let controller: EmployeesRolesController = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
     // Act
     let result: ActionResult = controller.GetAll(CancellationToken.None).Result
@@ -53,7 +53,7 @@ let ``GetById returns NotFound when repository returns NotFound`` () =
     |> ignore
 
     let loggerMock: Mock<ILogger<EmployeesRolesController>> = Mock<ILogger<EmployeesRolesController>>()
-    let controller: EmployeesRolesController = EmployeesRolesController(repoMock.Object, loggerMock.Object)
+    let controller: EmployeesRolesController = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
     // Act
     let result: ActionResult = controller.GetById("missing").Result

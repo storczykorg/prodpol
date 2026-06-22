@@ -4,6 +4,7 @@ open System.Threading
 open FSharp.Control
 open Storczyk.Async
 open Storczyk.Prodpol.Core.Models
+open Storczyk.Prodpol.Data.Models
 
 type IRepository<'TKey, 'TValue> =
     interface
@@ -27,3 +28,6 @@ type IEmployeesReadRepository =
 
 type IEmployeeRoleReadRepository =
     inherit IReadRepository<string, EmployeeRoleRead>
+
+type ICustomerSpendingReadRepository =
+    inherit IReadRepository<int64, CustomerSpending>

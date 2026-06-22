@@ -18,7 +18,8 @@
         <Compile Include="Controllers\StatusController.fs" />
         <Compile Include="Controllers\Data\EmployeesController.fs" />
         <Compile Include="Controllers\Data\EmployeeRolesController.fs" />
-        <Compile Include="Controllers\Data\EmployeePhotosController.fs" /><Compile Include="applyMigrations.fs" /><Compile Include="SqlMappings.fs" /><Compile Include="ProdpolServer.fs" />
+        <Compile Include="Controllers\Data\EmployeePhotosController.fs" />
+        <Compile Include="Controllers\Data\CustomerSpendingController.fs" /><Compile Include="applyMigrations.fs" /><Compile Include="SqlMappings.fs" /><Compile Include="ProdpolServer.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
