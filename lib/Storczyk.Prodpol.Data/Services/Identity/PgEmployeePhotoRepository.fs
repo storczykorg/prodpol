@@ -14,7 +14,7 @@ open Storczyk.Prodpol.Core.Utils
 type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
     interface IRepository<int64, EmployeePhoto> with
         member this.AddAsync(entity) =
-            asyncResult {
+            async {
                 use! conn = dataSource.OpenConnectionAsync()
                 use! scope = conn.BeginTransactionAsync()
 
@@ -32,7 +32,7 @@ type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
                     do! scope.CommitAsync()
             }
         member this.CountAsync(token) =
-            asyncResult {
+            async {
                 let! conn = dataSource.OpenConnectionAsync(token)
                 let cnt = wrapTask (conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employee_photos;"))
                 return! cnt
@@ -53,24 +53,18 @@ type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
                     )
                 with
                 | 0 ->
-                    do! scope.RollbackAsync()
-                    return Error DatabaseError.NotFound
+                    return raise (NotFoundException "Resource not found.")
                 | 1 ->
                     do! scope.CommitAsync()
-                    return Ok()
+                    return ()
                 | _ ->
-                    do! scope.RollbackAsync()
-
-                    return
-                        Error(
-                            DatabaseError.UnknownException(
-                                InvalidOperationException
-                                    "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                            )
-                        )
+                    return raise (
+                        InvalidOperationException
+                            "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                    )
             }
         member this.GetAllAsync(token) =
-            asyncResult {
+            async {
                 let! conn = dataSource.OpenConnectionAsync(token)
 
                 let! reader =
@@ -81,23 +75,18 @@ type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
                 return reader |> AsAsyncEnumerable
             }
         member this.GetByIdAsync(key) =
-            asyncResult {
+            async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
-                let! emp : EmployeePhoto | null =
-                    wrapTask (
-                        conn.QuerySingleOrDefaultAsync<EmployeePhoto | null>(
-                            "SELECT * FROM prodpol.employee_photos WHERE employee_id = @id;",
-                            param = {| id = key |},
-                            commandTimeout = 1000
-                        ))
-
-                match emp with
-                | null -> return! Error DatabaseError.NotFound
-                | _ -> return emp
+                return! wrapTask (
+                    conn.QuerySingleOrDefaultAsync<EmployeePhoto>(
+                        "SELECT * FROM prodpol.employee_photos WHERE employee_id = @id;",
+                        param = {| id = key |},
+                        commandTimeout = 1000
+                    ))
             }
-        member this.UpdateAsync key entity =
+        member this.UpdateAsync (key, entity) =
             async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
@@ -123,20 +112,14 @@ type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
                     )
                 with
                 | 0 ->
-                    do! scope.RollbackAsync()
-                    return Error DatabaseError.NotFound
+                    return raise (NotFoundException "Resource not found.")
                 | 1 ->
                     do! scope.CommitAsync()
-                    return Ok()
+                    return ()
                 | _ ->
-                    do! scope.RollbackAsync()
-
-                    return
-                        Error(
-                            DatabaseError.UnknownException(
-                                InvalidOperationException
-                                    "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                            )
-                        )
+                    return raise (
+                        InvalidOperationException
+                            "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                    )
 
             }

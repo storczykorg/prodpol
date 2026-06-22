@@ -8,7 +8,6 @@ open FSharp.Control
 open Microsoft.AspNetCore.Identity
 open Npgsql
 open Storczyk.Async
-open Storczyk.Async.DatabaseError
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Utils.AsyncIdentityResult
@@ -36,12 +35,11 @@ type PgEmployeeUserStore(dataSource: NpgsqlDataSource) =
                 let mutable id = 0L
 
                 if Int64.TryParse(userId, &id) then
-                    let! result = (this :> IEmployeesRepository).GetByIdAsync(id)
-
-                    match result with
-                    | Ok o -> return o
-                    | Error DatabaseError.NotFound -> return Employee()
-                    | Error r -> return throwError r
+                    try
+                        let! o = (this :> IEmployeesRepository).GetByIdAsync(id)
+                        return o
+                    with :? NotFoundException ->
+                        return Employee()
                 else
                     return raise (FormatException("userId must be a valid 64-bit integer"))
             }
@@ -82,7 +80,7 @@ type PgEmployeeUserStore(dataSource: NpgsqlDataSource) =
             Task.CompletedTask
 
         member this.UpdateAsync(user: Employee, cancellationToken) =
-            let result = (this :> IEmployeesRepository).UpdateAsync user.Id user
+            let result = (this :> IEmployeesRepository).UpdateAsync(user.Id, user)
             toIdentityResultAsync result
 
         member this.GetPasswordHashAsync(user, cancellationToken) =

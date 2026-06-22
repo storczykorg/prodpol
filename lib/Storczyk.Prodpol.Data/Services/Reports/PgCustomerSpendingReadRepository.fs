@@ -14,7 +14,7 @@ open Storczyk.Prodpol.Core.Utils
 type PgCustomerSpendingReadRepository(dataSource: NpgsqlDataSource) =
     interface ICustomerSpendingReadRepository with
         member this.GetAllAsync(token) =
-            asyncResult {
+            async {
                 let! conn = dataSource.OpenConnectionAsync(token)
 
                 let! reader =
@@ -39,7 +39,7 @@ type PgCustomerSpendingReadRepository(dataSource: NpgsqlDataSource) =
             }
 
         member this.CountAsync(token) =
-            asyncResult {
+            async {
                 use! conn = dataSource.OpenConnectionAsync(token)
                 return! wrapTask (conn.ExecuteScalarAsync<int64>(
                     "SELECT COUNT(*) FROM prodpol.customer_spending_report;"
@@ -47,7 +47,7 @@ type PgCustomerSpendingReadRepository(dataSource: NpgsqlDataSource) =
             }
 
         member this.GetByIdAsync(key: int64) =
-            asyncResult {
+            async {
                 let! ct = Async.CancellationToken
                 use! conn = dataSource.OpenConnectionAsync(ct)
 

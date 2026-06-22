@@ -6,7 +6,6 @@ open Microsoft.AspNetCore.JsonPatch.SystemTextJson
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
 open Storczyk.Async
-open Storczyk.Async.AsyncResult
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Utils
@@ -28,7 +27,7 @@ type EmployeesRolesController(
     [<HttpGet; Route("all")>]
     [<ProducesResponseType(typeof<EmployeeRoleRead[]>, 200)>]
     member this.GetAll(token: CancellationToken) =
-        asyncResult {
+        async {
             return! readRoles.GetAllAsync(token)
         } |> this.mapAsyncResult
 
@@ -40,12 +39,13 @@ type EmployeesRolesController(
     [<HttpPatch>]
     [<Route("{id:long}")>]
     member this.Update(id: string, [<FromBody>] update: JsonPatchDocument<EmployeeRole>) : Task<ActionResult> =
-        roles.GetByIdAsync(id)
-        |> (bind (fun emp ->
+        async {
+            let! emp = roles.GetByIdAsync(id)
             update.ApplyTo emp
-            this.ValidateObject emp))
-        |> bindIgnore (roles.UpdateAsync id)
-        |> this.mapAsyncResult
+            this.ValidateObject emp |> ignore
+            do! roles.UpdateAsync(id, emp)
+            return emp
+        } |> this.mapAsyncResult
 
     [<HttpDelete>]
     [<Route("{id:long}")>]
@@ -54,4 +54,6 @@ type EmployeesRolesController(
 
     [<HttpPost>]
     member this.Create([<FromBody>] entity: EmployeeRole) =
-        Return(this.ValidateObject entity) |> this.mapAsyncResult
+        async {
+            return this.ValidateObject entity
+        } |> this.mapAsyncResult

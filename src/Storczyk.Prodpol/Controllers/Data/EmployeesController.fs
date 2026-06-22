@@ -38,7 +38,7 @@ type EmployeesController
             token: CancellationToken,
             [<FromQuery>] ?roleName: string
         ) =
-        asyncResult {
+        async {
             let! result: AsyncSeq<EmployeeRead> = employeesRead.GetAllAsync(token)
             if (String.IsNullOrEmpty(roleName |> Option.toObj)) then
                 return result
@@ -54,7 +54,7 @@ type EmployeesController
             [<FromServices>] employeeSearch: IEmployeeSearchRepository,
             [<FromQuery>] options: EmployeeSearchOption
         ) =
-        asyncResult {
+        async {
            return! employeeSearch.SearchAsync(options, token)
         } |> this.mapAsyncResult
 
@@ -66,7 +66,7 @@ type EmployeesController
     [<HttpGet>]
     [<Route("{id:long}")>]
     member this.GetById(id: int64) =
-        asyncResult {
+        async {
             let! emp: EmployeeRead = employeesRead.GetByIdAsync(id)
             return emp
         } |> this.mapAsyncResult
@@ -75,18 +75,18 @@ type EmployeesController
     [<Consumes("text/json")>]
     [<ProducesResponseType(statusCode = 200, Type = typeof<EmployeeRead>)>]
     member this.Update(id: int64, [<FromBody>] update: JsonPatchDocument<Employee>) : Task<ActionResult> =
-        (asyncResult {
+        (async {
             let! emp: Employee = employees.GetByIdAsync(id)
 
-            do! this.ApplyPatch update emp
-            do! this.ValidateObject emp
-            do! employees.UpdateAsync id emp
+            this.ApplyPatch update emp
+            this.ValidateObject emp |> ignore
+            do! employees.UpdateAsync(id, emp)
 
 
             return emp
 
 
-        }: AsyncResult<Employee>)
+        })
         |> this.mapAsyncResult
 
     [<HttpDelete>]
@@ -108,9 +108,9 @@ type EmployeesController
                          .HashPassword(emp, (entity.Password |> defaultIfNull ""))
                          )
 
-        (asyncResult {
-            do! this.ValidateObject emp |> Result.map ignore
+        (async {
+            this.ValidateObject emp |> ignore
             do! employees.AddAsync emp
             return! employeesRead.GetByIdAsync(id)
-        }: AsyncResult<EmployeeRead>)
+        })
         |> this.mapAsyncResult

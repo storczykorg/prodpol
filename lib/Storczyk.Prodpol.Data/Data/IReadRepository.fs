@@ -2,12 +2,11 @@ namespace Storczyk.Prodpol.Core.Data
 
 open System.Threading
 open FSharp.Control
-open Storczyk.Async
 open Storczyk.Prodpol.Core.Models
 
 type IReadRepository<'TKey, 'TValue> =
     interface
-        abstract GetAllAsync: token: CancellationToken -> Async<Result<AsyncSeq<'TValue>, DatabaseError>>
-        abstract GetByIdAsync: key: 'TKey -> Async<Result<'TValue, DatabaseError>>
-        abstract CountAsync: CancellationToken -> Async<Result<int64, DatabaseError>>
+        abstract GetAllAsync: token: CancellationToken -> Async<AsyncSeq<'TValue>>
+        abstract GetByIdAsync: key: 'TKey -> Async<'TValue>
+        abstract CountAsync: CancellationToken -> Async<int64>
     end

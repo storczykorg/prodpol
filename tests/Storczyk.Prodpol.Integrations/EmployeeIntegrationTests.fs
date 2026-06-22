@@ -16,6 +16,7 @@ open System.Text.Json
 open Storczyk.Database.Services
 open Storczyk.Prodpol
 open Storczyk.Async
+open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
@@ -29,7 +30,7 @@ module TestHelpers =
 
         mockRepo
             .Setup(fun (m: IEmployeesReadRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-            .Returns(fun (_: int64) -> async { return Ok(emp) })
+            .Returns(fun (_: int64) -> async { return emp })
         |> ignore
 
         mockRepo
@@ -97,7 +98,7 @@ let ``POST /api/data/employees/ creates employee and returns 200`` () =
     let employeesRepo = Mock<IEmployeesRepository>()
     employeesRepo
         .Setup(fun (m: IEmployeesRepository) -> m.AddAsync(It.IsAny<Employee>()))
-        .Returns(fun (_: Employee) -> async { return Ok () })
+        .Returns(fun (_: Employee) -> async { return () })
     |> ignore
 
     let createdEmp = EmployeeRead()
@@ -115,7 +116,7 @@ let ``POST /api/data/employees/ creates employee and returns 200`` () =
     let employeesReadRepo = Mock<IEmployeesReadRepository>()
     employeesReadRepo
         .Setup(fun (m: IEmployeesReadRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Ok createdEmp })
+        .Returns(fun (_: int64) -> async { return createdEmp })
     |> ignore
 
     let passwordHasher = Mock<IPasswordHasher<Employee>>()
@@ -169,12 +170,12 @@ let ``PATCH /api/data/employees/1 updates employee name`` () =
     let employeesRepo = Mock<IEmployeesRepository>()
     employeesRepo
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Ok existingEmp })
+        .Returns(fun (_: int64) -> async { return existingEmp })
     |> ignore
 
     employeesRepo
-        .Setup(fun (m: IEmployeesRepository) -> m.UpdateAsync(It.IsAny<int64>())(It.IsAny<Employee>()))
-        .Returns(fun (_key: int64) (_emp: Employee) -> async { return Ok () })
+        .Setup(fun (m: IEmployeesRepository) -> m.UpdateAsync(It.IsAny<int64>(), It.IsAny<Employee>()))
+        .Returns(fun (_key: int64, _emp: Employee) -> async { return () })
     |> ignore
 
     let employeesReadRepo = Mock<IEmployeesReadRepository>()
@@ -208,7 +209,7 @@ let ``PATCH /api/data/employees/999 returns 404`` () =
     let employeesRepo = Mock<IEmployeesRepository>()
     employeesRepo
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Error DatabaseError.NotFound })
+        .Returns(fun (_: int64) -> async { return raise (NotFoundException "Resource not found.") })
     |> ignore
 
     let employeesReadRepo = Mock<IEmployeesReadRepository>()

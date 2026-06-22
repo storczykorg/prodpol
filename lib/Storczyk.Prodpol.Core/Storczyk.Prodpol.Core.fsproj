@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <Compile Include="Utils\Json.fs"/>
+        <Compile Include="Utils\ReferentialIntegrityException.fs" />
         <Compile Include="Utils\RegisterAsTransientAttribute.fs" />
         <Compile Include="Utils\ProdpolModel.fs" />
         <Compile Include="Utils\AsyncIdentityResult.fs" />

@@ -11,22 +11,19 @@ open Microsoft.AspNetCore.JsonPatch.SystemTextJson
 open FSharp.Control
 open System.Threading
 open Storczyk.Async
+open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Controllers.Data
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Services
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Dat.Forms
 
+type private NoOpObjectModelValidator() =
+    interface IObjectModelValidator with
+        member _.Validate(_: ActionContext, _: ValidationStateDictionary, _: string, _: obj) = ()
+
 let private setupControllerValidation (controller: ControllerBase) =
-    let validatorMock = Mock<IObjectModelValidator>()
-    validatorMock
-        .Setup(fun (v: IObjectModelValidator) -> v.Validate(
-            It.IsAny<ActionContext>(),
-            It.IsAny<ValidationStateDictionary>(),
-            It.IsAny<string>(),
-            It.IsAny<Object>()))
-    |> ignore
-    controller.ObjectValidator <- validatorMock.Object
+    controller.ObjectValidator <- NoOpObjectModelValidator()
 
 [<Test>]
 let ``Search returns Ok with results`` () =
@@ -44,7 +41,7 @@ let ``Search returns Ok with results`` () =
     repoMock
         .Setup(fun (m: IEmployeeSearchRepository) ->
             m.SearchAsync(It.IsAny<EmployeeSearchOption>(), It.IsAny<CancellationToken>()))
-        .Returns(fun (_: EmployeeSearchOption) (_: CancellationToken) -> async { return Ok(result) })
+        .Returns(fun (_: EmployeeSearchOption) (_: CancellationToken) -> async { return result })
     |> ignore
 
     let employeesMock: Mock<IEmployeesRepository> = Mock<IEmployeesRepository>()
@@ -79,7 +76,7 @@ let ``Search returns NotFound when repository returns NotFound`` () =
     repoMock
         .Setup(fun (m: IEmployeeSearchRepository) ->
             m.SearchAsync(It.IsAny<EmployeeSearchOption>(), It.IsAny<CancellationToken>()))
-        .Returns(fun (_: EmployeeSearchOption) (_: CancellationToken) -> async { return Error DatabaseError.NotFound })
+        .Returns(fun (_: EmployeeSearchOption) (_: CancellationToken) -> async { return raise (NotFoundException "Resource not found.") })
     |> ignore
 
     let employeesMock = Mock<IEmployeesRepository>()
@@ -113,7 +110,7 @@ let ``Create returns Ok with EmployeeRead`` () =
     let employeesRepoMock = Mock<IEmployeesRepository>()
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.AddAsync(It.IsAny<Employee>()))
-        .Returns(fun (_: Employee) -> async { return Ok () })
+        .Returns(fun (_: Employee) -> async { return () })
     |> ignore
 
     let expectedEmp = EmployeeRead()
@@ -126,7 +123,7 @@ let ``Create returns Ok with EmployeeRead`` () =
     let employeesReadRepoMock = Mock<IEmployeesReadRepository>()
     employeesReadRepoMock
         .Setup(fun (m: IEmployeesReadRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Ok expectedEmp })
+        .Returns(fun (_: int64) -> async { return expectedEmp })
     |> ignore
 
     let snowMock = Mock<ISnowflakeGenerator>()
@@ -176,7 +173,7 @@ let ``Create returns BadRequest when email already exists`` () =
     let employeesRepoMock = Mock<IEmployeesRepository>()
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.AddAsync(It.IsAny<Employee>()))
-        .Returns(fun (_: Employee) -> async { return Error (DatabaseError.ValidationErrors(errors)) })
+        .Returns(fun (_: Employee) -> async { return raise (ValidationErrorException errors) })
     |> ignore
 
     let employeesReadRepoMock = Mock<IEmployeesReadRepository>()
@@ -204,7 +201,7 @@ let ``Create returns BadRequest when email already exists`` () =
     // Assert
     match actionResult with
     | :? ObjectResult as (obj: ObjectResult) ->
-        Assert.That(obj.StatusCode, Is.EqualTo(Nullable 400))
+        Assert.That(obj.StatusCode, Is.EqualTo(Nullable 400), "Expected 400 status code")
     | _ -> Assert.Fail("Expected 400 ObjectResult")
 
 [<Test>]
@@ -222,7 +219,7 @@ let ``Update returns Ok with patched EmployeeRead`` () =
     let employeesRepoMock = Mock<IEmployeesRepository>()
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Ok existingEmp })
+        .Returns(fun (_: int64) -> async { return existingEmp })
     |> ignore
 
     let employeesReadRepoMock = Mock<IEmployeesReadRepository>()
@@ -234,12 +231,12 @@ let ``Update returns Ok with patched EmployeeRead`` () =
 
     setupControllerValidation controller
 
-    let patchJson = """[{"op":"replace","path":"/nameFirst","value":"NewName"}]"""
+    let patchJson = """[{"op":"replace","path":"/NameFirst","value":"NewName"}]"""
     let patch = JsonSerializer.Deserialize<JsonPatchDocument<Employee>>(patchJson)
 
     employeesRepoMock
-        .Setup(fun (m: IEmployeesRepository) -> m.UpdateAsync(It.IsAny<int64>())(It.IsAny<Employee>()))
-        .Returns(fun (_key: int64) (_emp: Employee) -> async { return Ok () })
+        .Setup(fun (m: IEmployeesRepository) -> m.UpdateAsync(It.IsAny<int64>(), It.IsAny<Employee>()))
+        .Returns(fun (_key: int64) (_emp: Employee) -> async { return () })
     |> ignore
 
     // Act
@@ -262,7 +259,7 @@ let ``Update returns NotFound when employee missing`` () =
     let employeesRepoMock = Mock<IEmployeesRepository>()
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Error DatabaseError.NotFound })
+        .Returns(fun (_: int64) -> async { return raise (NotFoundException "Resource not found.") })
     |> ignore
 
     let employeesReadRepoMock = Mock<IEmployeesReadRepository>()
@@ -272,7 +269,7 @@ let ``Update returns NotFound when employee missing`` () =
     let controller =
         EmployeesController(employeesRepoMock.Object, employeesReadRepoMock.Object, snowMock.Object, loggerMock.Object)
 
-    let patchJson = """[{"op":"replace","path":"/nameFirst","value":"NewName"}]"""
+    let patchJson = """[{"op":"replace","path":"/NameFirst","value":"NewName"}]"""
     let patch = JsonSerializer.Deserialize<JsonPatchDocument<Employee>>(patchJson)
 
     // Act
@@ -297,7 +294,7 @@ let ``Update returns BadRequest on invalid JSON Patch`` () =
     let employeesRepoMock = Mock<IEmployeesRepository>()
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Ok existingEmp })
+        .Returns(fun (_: int64) -> async { return existingEmp })
     |> ignore
 
     let employeesReadRepoMock = Mock<IEmployeesReadRepository>()
@@ -313,8 +310,8 @@ let ``Update returns BadRequest on invalid JSON Patch`` () =
     let patch = JsonSerializer.Deserialize<JsonPatchDocument<Employee>>(patchJson)
 
     employeesRepoMock
-        .Setup(fun (m: IEmployeesRepository) -> m.UpdateAsync(It.IsAny<int64>())(It.IsAny<Employee>()))
-        .Returns(fun (_key: int64) (_emp: Employee) -> async { return Ok () })
+        .Setup(fun (m: IEmployeesRepository) -> m.UpdateAsync(It.IsAny<int64>(), It.IsAny<Employee>()))
+        .Returns(fun (_key: int64) (_emp: Employee) -> async { return () })
     |> ignore
 
     // Act
@@ -324,5 +321,5 @@ let ``Update returns BadRequest on invalid JSON Patch`` () =
     // Assert
     match actionResult with
     | :? ObjectResult as (obj: ObjectResult) ->
-        Assert.That(obj.StatusCode, Is.EqualTo(Nullable 400))
+        Assert.That(obj.StatusCode, Is.EqualTo(Nullable 400), "Expected 400 status code")
     | _ -> Assert.Fail("Expected 400 ObjectResult")

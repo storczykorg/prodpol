@@ -9,6 +9,7 @@ open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.Mvc.ModelBinding.Validation
 open Microsoft.AspNetCore.Mvc
 open Storczyk.Async
+open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Services
@@ -25,7 +26,7 @@ let mockRoleRepoGetAll (roles: seq<EmployeeRole>) =
 
     repo
         .Setup(fun m -> m.GetAllAsync(It.IsAny<CancellationToken>()))
-        .Returns(fun (_: CancellationToken) -> async { return Ok(asyncSeq { for r: EmployeeRole in roles -> r }) })
+        .Returns(fun (_: CancellationToken) -> async { return asyncSeq { for r: EmployeeRole in roles -> r } })
     |> ignore
 
     repo
@@ -35,7 +36,7 @@ let mockRoleRepoGetByIdNotFound () =
 
     repo
         .Setup(fun m -> m.GetByIdAsync(It.IsAny<string>()))
-        .Returns(fun (_: string) -> async { return Error DatabaseError.NotFound })
+        .Returns(fun (_: string) -> async { return raise (NotFoundException "Resource not found.") })
     |> ignore
 
     repo
@@ -47,7 +48,7 @@ let mockSnowflakeGenerator (id: int64) =
     mock.Setup(fun m -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(id) |> ignore
     mock
 
-let mockEmployeeRepoAddAsync (result: AsyncResult<unit>) =
+let mockEmployeeRepoAddAsync (result: Async<unit>) =
     let mock = Mock<IEmployeesRepository>()
     mock
         .Setup(fun m -> m.AddAsync(It.IsAny<Employee>()))
@@ -55,11 +56,11 @@ let mockEmployeeRepoAddAsync (result: AsyncResult<unit>) =
     |> ignore
     mock
 
-let mockEmployeeRepoUpdateAsync (result: AsyncResult<unit>) =
+let mockEmployeeRepoUpdateAsync (result: Async<unit>) =
     let mock = Mock<IEmployeesRepository>()
     mock
-        .Setup(fun m -> m.UpdateAsync(It.IsAny<int64>())(It.IsAny<Employee>()))
-        .Returns(fun (_: int64) (_: Employee) -> result)
+        .Setup(fun m -> m.UpdateAsync(It.IsAny<int64>(), It.IsAny<Employee>()))
+        .Returns(fun (_: int64, _: Employee) -> result)
     |> ignore
     mock
 
@@ -67,7 +68,7 @@ let mockEmployeeRepoGetById (emp: Employee) =
     let mock = Mock<IEmployeesRepository>()
     mock
         .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Ok emp })
+        .Returns(fun (_: int64) -> async { return emp })
     |> ignore
     mock
 
@@ -75,7 +76,7 @@ let mockEmployeeRepoGetByIdNotFound () =
     let mock = Mock<IEmployeesRepository>()
     mock
         .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Error DatabaseError.NotFound })
+        .Returns(fun (_: int64) -> async { return raise (NotFoundException "Resource not found.") })
     |> ignore
     mock
 
@@ -83,7 +84,7 @@ let mockEmployeeReadRepoGetById (emp: EmployeeRead) =
     let mock = Mock<IEmployeesReadRepository>()
     mock
         .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return Ok emp })
+        .Returns(fun (_: int64) -> async { return emp })
     |> ignore
     mock
 

@@ -39,7 +39,7 @@ type CustomerSpendingController(
     [<HttpGet>]
     [<Route("{id:long}")>]
     member this.GetById(id: int64) =
-        asyncResult {
+        async {
             let! cs: CustomerSpending = customerSpendingRead.GetByIdAsync(id)
             return cs
         } |> this.mapAsyncResult

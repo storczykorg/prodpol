@@ -14,7 +14,7 @@ open Storczyk.Prodpol.Core.Utils
 type PgEmployeeRoleReadRepository(dataSource: NpgsqlDataSource) =
     interface IEmployeeRoleReadRepository with
         member this.GetAllAsync(token) =
-            asyncResult {
+            async {
                 let! conn = dataSource.OpenConnectionAsync(token)
 
                 let! reader =
@@ -35,7 +35,7 @@ type PgEmployeeRoleReadRepository(dataSource: NpgsqlDataSource) =
             }
 
         member this.CountAsync(token) =
-            asyncResult {
+            async {
                 use! conn = dataSource.OpenConnectionAsync(token)
                 return! wrapTask (conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employee_roles;"))
             }

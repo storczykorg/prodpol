@@ -14,7 +14,7 @@ open Storczyk.Prodpol.Core.Utils
 type PgEmployeeSearchRepository(dataSource: NpgsqlDataSource) =
     interface IEmployeeSearchRepository with
         member this.CountSearchAsync(options: EmployeeSearchOption, token) =
-            asyncResult {
+            async {
                 let! conn = dataSource.OpenConnectionAsync(token)
 
                 let sql = """SELECT count(*) FROM prodpol.filtered_employees(
@@ -39,8 +39,8 @@ type PgEmployeeSearchRepository(dataSource: NpgsqlDataSource) =
                         )
             }
 
-        member this.SearchAsync(options: EmployeeSearchOption, token): AsyncResult<EmployeeSearchResult> =
-            asyncResult {
+        member this.SearchAsync(options: EmployeeSearchOption, token) =
+            async {
                 use! conn = dataSource.OpenConnectionAsync(token)
 
                 let sql =

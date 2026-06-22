@@ -24,24 +24,8 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
         or LOWER(email) = LOWER(@email);
         """
     interface IEmployeesRepository with
-        /// Adds a new employee to the repository asynchronously.
-        ///
-        /// Inserts the provided employee entity into the employees table with all relevant
-        /// fields including employee_id, names, email, phone number and password hash.
-        ///
-        /// If the operation succeeds, returns () after committing the transaction. If no rows
-        /// were affected (e.g., constraint conflict), returns a DatabaseError.NotFound error.
-        /// Any unexpected query results will raise an exception with diagnostic information.
-        ///
-        /// Returns AsyncResult<(), DatabaseError>
-        /// Inserts a new employee record into the PostgreSQL database within a transactional scope.
-        /// Executes an INSERT statement against the 'prodpol.employees' table, mapping fields from the
-        /// provided Employee entity (Id, NameFirst, NameLast, Email, PhoneNumber, PasswordHash) to the
-        /// corresponding database columns. Commits the transaction if exactly one row is inserted.
-        /// Returns Ok with unit on success. Returns DatabaseError.NotFound if zero rows are affected.
-        /// Raises an Exception for invalid insertion counts. Supports asynchronous cancellation via CancellationToken.
         member this.AddAsync(entity) =
-            asyncResult {
+            async {
                 let errors = new List<ValidationErrorDetail>()
 
                 let! ct = Async.CancellationToken
@@ -59,8 +43,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
 
 
                 if(errors.Count > 0) then
-                    do! scope.RollbackAsync()
-                    return! Error (DatabaseError.ValidationErrors errors)
+                    return raise (ValidationErrorException errors)
 
                 let sql =
                     // language=postgresql
@@ -88,46 +71,42 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                     do! scope.CommitAsync()
                     return ()
                 | 0 ->
-                    return! Error DatabaseError.NotFound
+                    return raise (NotFoundException "Resource not found.")
                 | _ ->
                     raise (Exception $"Invalid query result. Result: {result}\nQuery: \n{sql}")
             }
 
         member this.DeleteAsync(key) =
             async {
-                let! ct = Async.CancellationToken
-                let! conn = dataSource.OpenConnectionAsync(ct)
-
-                use! scope = conn.BeginTransactionAsync(ct)
-
-                match!
-                    conn.ExecuteAsync(
-                        // language=postgresql
-                        "DELETE FROM prodpol.employees
-                        WHERE employee_id = (@id);",
-                        {| id = key |}
-                    )
-                with
-                | 0 ->
-                    do! scope.RollbackAsync()
-                    return Error DatabaseError.NotFound
-                | 1 ->
-                    do! scope.CommitAsync()
-                    return Ok()
-                | _ ->
-                    do! scope.RollbackAsync()
-
-                    return
-                        Error(
-                            DatabaseError.UnknownException(
-                                InvalidOperationException
-                                    "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                try
+                    let! ct = Async.CancellationToken
+                    use! conn = dataSource.OpenConnectionAsync(ct)
+                    use! scope = conn.BeginTransactionAsync(ct)
+                    let! result =
+                        wrapTask (
+                            conn.ExecuteAsync(
+                                // language=postgresql
+                                "DELETE FROM prodpol.employees
+                                WHERE employee_id = (@id);",
+                                {| id = key |}
                             )
                         )
+                    match result with
+                    | 0 ->
+                        return raise (NotFoundException "Resource not found.")
+                    | 1 ->
+                        return ()
+                    | _ ->
+                        return raise (
+                            InvalidOperationException
+                                "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                        )
+                with :? PostgresException as ex when ex.SqlState = "23502" ->
+                    raise (ReferentialIntegrityException(ex.TableName, ex.ColumnName, ex))
             }
 
         member this.GetAllAsync(token) =
-            asyncResult {
+            async {
                 let! conn = dataSource.OpenConnectionAsync(token)
 
                 let! reader =
@@ -138,15 +117,15 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 return reader |> AsAsyncEnumerable
             }
 
-        member this.CountAsync(token) : AsyncResult<int64> =
-            asyncResult {
+        member this.CountAsync(token) =
+            async {
                 let! conn = dataSource.OpenConnectionAsync(token)
                 let cnt = wrapTask (conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employees;"))
                 return! cnt
             }
 
-        member this.GetByIdAsync(key) : AsyncResult<Employee, DatabaseError> =
-            asyncResult {
+        member this.GetByIdAsync(key) =
+            async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
@@ -161,9 +140,8 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 return! emp
             }
 
-        member this.UpdateAsync (key: int64) (
-            entity: Employee) : AsyncResult<unit> =
-            asyncResult {
+        member this.UpdateAsync ((key: int64), (entity: Employee)) =
+            async {
                 let errors = new List<ValidationErrorDetail>()
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
@@ -186,8 +164,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
 
 
                 if(errors.Count > 0) then
-                    do! scope.RollbackAsync()
-                    return! Error (DatabaseError.ValidationErrors errors)
+                    return raise (ValidationErrorException errors)
 
                 match!
                     wrapTask(conn.ExecuteAsync(
@@ -211,26 +188,20 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                     ))
                 with
                 | 0 ->
-                    do! scope.RollbackAsync()
-                    return! Error DatabaseError.NotFound
+                    return raise (NotFoundException "Resource not found.")
                 | 1 ->
                     do! scope.CommitAsync()
                 | _ ->
-                    do! scope.RollbackAsync()
-
-                    return!
-                        Error(
-                            DatabaseError.UnknownException(
-                                InvalidOperationException
-                                    "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                            )
-                        )
+                    return raise (
+                        InvalidOperationException
+                            "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                    )
 
             }
 
     interface IEmployeesReadRepository with
         member this.GetAllAsync(token) =
-            asyncResult {
+            async {
                 use! conn = dataSource.OpenConnectionAsync(token)
 
                 let! results =
@@ -260,14 +231,14 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
             }
 
         member this.CountAsync(token) =
-            asyncResult {
+            async {
                 use! conn = dataSource.OpenConnectionAsync(token)
                 let cnt = wrapTask (conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employees;"))
                 return! cnt
             }
 
         member this.GetByIdAsync(key) =
-            asyncResult {
+            async {
                 let! ct = Async.CancellationToken
                 use! conn = dataSource.OpenConnectionAsync(ct)
 

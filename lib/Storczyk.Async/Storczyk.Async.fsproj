@@ -7,10 +7,9 @@
 
     <ItemGroup>
         <Folder Include="Data\" />
-        <Compile Include="DatabaseError.fs" />
+        <Compile Include="Errors.fs" />
         <Compile Include="Task.fs" />
         <Compile Include="AsyncResult.fs" />
-        <Compile Include="AsyncResultCE.fs" />
     </ItemGroup>
 
     <ItemGroup>

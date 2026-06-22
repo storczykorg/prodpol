@@ -29,19 +29,15 @@ type EmployeePhotosController(photos: IRepository<int64, EmployeePhoto>,
     member this.GetById(id: int64,
                         [<Optional; DefaultParameterValue(64)>]
                         w: int) =
-        async {
-           match! asyncResult {
+        task {
+            try
                 let! result : EmployeePhoto = photos.GetByIdAsync(id)
-
-                return this.File(
-                    result.Payload,
-                    result.MimeType)
-            } with
-           | Ok r -> return r :> IActionResult
-           | Error (DatabaseError.NotFound) -> return StatusCodeResult(StatusCodes.Status404NotFound) :> IActionResult
-           | e ->
-               let! x = this.mapAsyncResult(async{return e})
-               return x :> IActionResult
+                return this.File(result.Payload, result.MimeType) :> IActionResult
+            with
+            | :? NotFoundException ->
+                return StatusCodeResult(StatusCodes.Status404NotFound) :> IActionResult
+            | ex ->
+                return this.HandleError(ex) :> IActionResult
         }
 
     [<HttpPatch>]

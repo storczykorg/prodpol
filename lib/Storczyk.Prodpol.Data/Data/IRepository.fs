@@ -2,16 +2,15 @@
 
 open System.Threading
 open FSharp.Control
-open Storczyk.Async
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Data.Models
 
 type IRepository<'TKey, 'TValue> =
     interface
         inherit IReadRepository<'TKey, 'TValue>
-        abstract AddAsync: entity: 'TValue -> Async<Result<unit, DatabaseError>>
-        abstract UpdateAsync: key: 'TKey -> entity: 'TValue -> Async<Result<unit, DatabaseError>>
-        abstract DeleteAsync: key: 'TKey -> Async<Result<unit, DatabaseError>>
+        abstract AddAsync: entity: 'TValue -> Async<unit>
+        abstract UpdateAsync: key: 'TKey * entity: 'TValue -> Async<unit>
+        abstract DeleteAsync: key: 'TKey -> Async<unit>
     end
 
 type IEmployeesRepository =

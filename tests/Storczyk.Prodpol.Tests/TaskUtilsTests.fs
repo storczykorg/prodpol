@@ -8,68 +8,39 @@ open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Data
 
 [<Test>]
-let ``Task.wrap returns Ok on success`` () =
-    let r: Result<int, DatabaseError> =
+let ``Task.wrap returns value on success`` () =
+    let r: int =
         Task.wrapAsync (fun _ -> Task.FromResult 42) |> Async.RunSynchronously
-
-    match r with
-    | Ok v -> Assert.That(v, Is.EqualTo(42))
-    | Error e -> Assert.Fail(sprintf "Expected Ok but got Error %A" e)
+    Assert.That(r, Is.EqualTo(42))
 
 [<Test>]
-let ``Task.wrap maps OperationCanceledException to OperationCancelled error`` () =
-    let t: Result<int, DatabaseError> =
-        Task.wrapAsync (fun _ ->
-            Task.Run<int>(fun () ->
-                raise (OperationCanceledException())
-                0))
+let ``Task.wrap throws NotFoundException on null`` () =
+    Assert.Throws<NotFoundException>(Action(fun () ->
+        Task.wrapAsync (fun _ -> Task.FromResult<string>(null))
         |> Async.RunSynchronously
-
-    match t with
-    | Error (OperationCancelled e) -> Assert.Pass()
-    | _ -> Assert.Fail("Expected OperationCancelled error")
+        |> ignore
+    )) |> ignore
 
 [<Test>]
-let ``Task.wrap maps TimeoutException to ConnectionTimeout error`` () =
-    let t: Result<int, DatabaseError> =
-        Task.wrapAsync (fun _ ->
-            Task.Run<int>(fun () ->
-                raise (TimeoutException())
-                0))
-        |> Async.RunSynchronously
-
-    match t with
-    | Error (DatabaseError.ConnectionTimeout e) -> Assert.Pass()
-    | _ -> Assert.Fail("Expected ConnectionTimeout error")
-
-[<Test>]
-let ``Task.wrapOpt maps None to NotFound`` () =
-    let r: Result<int, DatabaseError> =
+let ``Task.wrapOpt throws NotFoundException on None`` () =
+    Assert.Throws<NotFoundException>(Action(fun () ->
         Task.wrapOpt (fun _ -> Task.FromResult(None: int option))
         |> Async.RunSynchronously
-
-    match r with
-    | Error DatabaseError.NotFound -> Assert.Pass()
-    | _ -> Assert.Fail("Expected NotFound error")
+        |> ignore
+    )) |> ignore
 
 [<Test>]
-let ``Async.wrap returns Ok on success`` () =
-    let r: Result<int, DatabaseError> =
+let ``Async.wrap returns value on success`` () =
+    let r: int =
         Async.wrap (fun _ -> async { return 7 }) |> Async.RunSynchronously
-
-    match r with
-    | Ok v -> Assert.That(v, Is.EqualTo(7))
-    | Error e -> Assert.Fail(sprintf "Expected Ok but got Error %A" e)
+    Assert.That(r, Is.EqualTo(7))
 
 [<Test>]
-let ``Async.wrap maps TimeoutException to ConnectionTimeout`` () =
-    let r: Result<unit, DatabaseError> =
+let ``Async.wrap lets exceptions propagate`` () =
+    Assert.Throws<TimeoutException>(Action(fun () ->
         Async.wrap (fun _ -> async { do raise (TimeoutException()) })
         |> Async.RunSynchronously
-
-    match r with
-    | Error (DatabaseError.ConnectionTimeout e) -> Assert.Pass()
-    | _ -> Assert.Fail("Expected ConnectionTimeout error")
+    )) |> ignore
 
 [<Test>]
 let ``toTaskFunc and toAsyncFunc convert ValueTask functions`` () =
