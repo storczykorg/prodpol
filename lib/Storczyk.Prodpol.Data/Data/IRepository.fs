@@ -30,3 +30,30 @@ type IEmployeeRoleReadRepository =
 
 type ICustomerSpendingReadRepository =
     inherit IReadRepository<int64, CustomerSpending>
+
+type IProductReadRepository =
+    inherit IReadRepository<int64, ProductRead>
+
+type IProductDescriptionRepository =
+    inherit IRepository<int64 * string option, ProductDescription>
+
+type ICustomerRepository =
+    inherit IRepository<int64, Customer>
+
+type ICustomerReadRepository =
+    inherit IReadRepository<int64, CustomerRead>
+
+type ICustomerRoleRepository =
+    inherit IDictionaryRepository<CustomerRole>
+
+type IOrderRepository =
+    inherit IRepository<int64, Order>
+
+type IOrderReadRepository =
+    inherit IReadRepository<int64, OrderRead>
+
+type IOrderDetailsRepository =
+    inherit IRepository<int64, OrderDetails>
+
+type IOrderProductRepository =
+    inherit IRepository<int64, OrderProduct>

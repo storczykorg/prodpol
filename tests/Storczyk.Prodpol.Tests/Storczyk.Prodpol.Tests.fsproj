@@ -20,6 +20,9 @@
       <Compile Include="EmployeesControllerTests.fs" />
       <Compile Include="TaskUtilsTests.fs" />
       <Compile Include="EmailValidationTests.fs" />
+      <Compile Include="ProductModelTests.fs" />
+      <Compile Include="CustomerModelTests.fs" />
+      <Compile Include="OrderModelTests.fs" />
       <Compile Include="PgEmployeeSearchRepositoryTests.fs" />
       <Compile Include="Program.fs" />
     </ItemGroup>

@@ -22,6 +22,25 @@
         <Compile Include="Models\EmployeeSearch.fs"/>
         <Compile Include="Models\EmployeePhoto.fs" />
         <Compile Include="Models\Product.fs" />
+        <Compile Include="Models\ProductRead.fs" />
+        <Compile Include="Models\ProductDescription.fs" />
+        <Compile Include="Models\CustomerRole.fs" />
+        <Compile Include="Models\Customer.fs" />
+        <Compile Include="Models\CustomerRead.fs" />
+        <Compile Include="Models\ProductOrderKeys.fs" />
+        <Compile Include="Models\ProductSearchOption.fs" />
+        <Compile Include="Models\ProductSearchResult.fs" />
+        <Compile Include="Models\CustomerOrderKeys.fs" />
+        <Compile Include="Models\CustomerSearchOption.fs" />
+        <Compile Include="Models\CustomerSearchResult.fs" />
+        <Compile Include="Models\OrderTotalDetails.fs" />
+        <Compile Include="Models\Order.fs" />
+        <Compile Include="Models\OrderRead.fs" />
+        <Compile Include="Models\OrderDetails.fs" />
+        <Compile Include="Models\OrderProduct.fs" />
+        <Compile Include="Models\OrderOrderKeys.fs" />
+        <Compile Include="Models\OrderSearchOption.fs" />
+        <Compile Include="Models\OrderSearchResult.fs" />
     </ItemGroup>
 
     <ItemGroup>

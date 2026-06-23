@@ -14,6 +14,9 @@
       <Compile Include="Data\IReadRepository.fs" />
       <Compile Include="Data\IRepository.fs" />
       <Compile Include="Data\IEmployeeSearchRepository.fs" />
+      <Compile Include="Data\IProductSearchRepository.fs" />
+      <Compile Include="Data\ICustomerSearchRepository.fs" />
+      <Compile Include="Data\IOrderSearchRepository.fs" />
       <Compile Include="Services\SnowflakeGenerator.fs" />
       <Compile Include="Services\Identity\NullEmployeeRepository.fs" />
       <Compile Include="Services\Identity\PgEmployeeRoleReadRepository.fs" />
