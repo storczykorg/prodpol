@@ -18,25 +18,34 @@ type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
                 use! conn = dataSource.OpenConnectionAsync()
                 use! scope = conn.BeginTransactionAsync()
 
-                let sql = """
+                let sql =
+                    """
                 INSERT INTO prodpol.employee_photos(employee_id, mime_type, payload, payload_size)
                 values ((@id)::bigint, (@mime)::varchar(128), (@payload)::bytea, (@payload_size)::integer);
                 """
 
-                let param = {| id = entity.EmployeeId; mime = entity.MimeType; payload = entity.Payload; payload_size = entity.Payload.Length |}
+                let param =
+                    {| id = entity.EmployeeId
+                       mime = entity.MimeType
+                       payload = entity.Payload
+                       payload_size = entity.Payload.Length |}
 
-                let! results = wrapTask(conn.ExecuteAsync(
-                    sql, param))
+                let! results = wrapTask (conn.ExecuteAsync(sql, param))
 
                 if results = 1 then
                     do! scope.CommitAsync()
             }
+
         member this.CountAsync(token) =
             async {
                 let! conn = dataSource.OpenConnectionAsync(token)
-                let cnt = wrapTask (conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employee_photos;"))
+
+                let cnt =
+                    wrapTask (conn.ExecuteScalarAsync<int64>("SELECT COUNT(*) FROM prodpol.employee_photos;"))
+
                 return! cnt
             }
+
         member this.DeleteAsync(key) =
             async {
                 let! ct = Async.CancellationToken
@@ -52,41 +61,49 @@ type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
                         {| id = key |}
                     )
                 with
-                | 0 ->
-                    return raise (NotFoundException "Resource not found.")
+                | 0 -> return raise (NotFoundException "Resource not found.")
                 | 1 ->
                     do! scope.CommitAsync()
                     return ()
                 | _ ->
-                    return raise (
-                        InvalidOperationException
-                            "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                    )
+                    return
+                        raise (
+                            InvalidOperationException
+                                "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                        )
             }
+
         member this.GetAllAsync(token) =
             async {
                 let! conn = dataSource.OpenConnectionAsync(token)
 
                 let! reader =
-                    wrapTask (conn.QueryAsync<EmployeePhoto>(
+                    wrapTask (
+                        conn.QueryAsync<EmployeePhoto>(
                             "SELECT * FROM prodpol.employee_photos
                             ORDER BY employee_id;"
-                        ))
+                        )
+                    )
+
                 return reader |> AsAsyncEnumerable
             }
+
         member this.GetByIdAsync(key) =
             async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
 
-                return! wrapTask (
-                    conn.QuerySingleOrDefaultAsync<EmployeePhoto>(
-                        "SELECT * FROM prodpol.employee_photos WHERE employee_id = @id;",
-                        param = {| id = key |},
-                        commandTimeout = 1000
-                    ))
+                return!
+                    wrapTask (
+                        conn.QuerySingleOrDefaultAsync<EmployeePhoto>(
+                            "SELECT * FROM prodpol.employee_photos WHERE employee_id = @id;",
+                            param = {| id = key |},
+                            commandTimeout = 1000
+                        )
+                    )
             }
-        member this.UpdateAsync (key, entity) =
+
+        member this.UpdateAsync(key, entity) =
             async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
@@ -107,19 +124,18 @@ type PgEmployeePhotoRepository(dataSource: NpgsqlDataSource) =
                            newKey = entity.EmployeeId
                            payload = entity.Payload
                            mime_type = entity.MimeType
-                           payload_size = entity.PayloadSize
-                           |}
+                           payload_size = entity.PayloadSize |}
                     )
                 with
-                | 0 ->
-                    return raise (NotFoundException "Resource not found.")
+                | 0 -> return raise (NotFoundException "Resource not found.")
                 | 1 ->
                     do! scope.CommitAsync()
                     return ()
                 | _ ->
-                    return raise (
-                        InvalidOperationException
-                            "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                    )
+                    return
+                        raise (
+                            InvalidOperationException
+                                "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                        )
 
             }

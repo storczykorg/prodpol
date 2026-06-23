@@ -12,10 +12,9 @@ open Storczyk.Prodpol.Utils
 
 [<ApiController>]
 [<Route("api/data/employees/roles/")>]
-type EmployeesRolesController(
-                              readRoles: IEmployeeRoleReadRepository,
-                              roles: IEmployeeRoleRepository,
-                              logger: ILogger<EmployeesRolesController>) =
+type EmployeesRolesController
+    (readRoles: IEmployeeRoleReadRepository, roles: IEmployeeRoleRepository, logger: ILogger<EmployeesRolesController>)
+    =
     inherit LoggedController()
     override this.Logger = logger
 
@@ -27,9 +26,7 @@ type EmployeesRolesController(
     [<HttpGet; Route("all")>]
     [<ProducesResponseType(typeof<EmployeeRoleRead[]>, 200)>]
     member this.GetAll(token: CancellationToken) =
-        async {
-            return! readRoles.GetAllAsync(token)
-        } |> this.mapAsyncResult
+        async { return! readRoles.GetAllAsync(token) } |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("{id:long}")>]
@@ -45,7 +42,8 @@ type EmployeesRolesController(
             this.ValidateObject emp |> ignore
             do! roles.UpdateAsync(id, emp)
             return emp
-        } |> this.mapAsyncResult
+        }
+        |> this.mapAsyncResult
 
     [<HttpDelete>]
     [<Route("{id:long}")>]
@@ -54,6 +52,4 @@ type EmployeesRolesController(
 
     [<HttpPost>]
     member this.Create([<FromBody>] entity: EmployeeRole) =
-        async {
-            return this.ValidateObject entity
-        } |> this.mapAsyncResult
+        async { return this.ValidateObject entity } |> this.mapAsyncResult

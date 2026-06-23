@@ -21,8 +21,10 @@ type LoggedController() =
         | :? System.Collections.Generic.KeyNotFoundException -> this.NotFound()
         | :? ValidationErrorException as vex ->
             let dict = ModelStateDictionary()
+
             for e in vex.Errors do
                 dict.TryAddModelError(e.Field, e.Issue) |> ignore
+
             BadRequestObjectResult(dict) :> ActionResult
         | :? System.TimeoutException -> this.Problem(statusCode = 408)
         | :? System.OperationCanceledException -> this.Problem(statusCode = 499)
@@ -33,11 +35,16 @@ type LoggedController() =
             this.Logger.LogError(ex, "Unhandled error")
             this.Problem(statusCode = 500)
 
-    member this.ApplyPatch(patch: JsonPatchDocument<'a>)(obj: 'a) : unit =
+    member this.ApplyPatch (patch: JsonPatchDocument<'a>) (obj: 'a) : unit =
         try
             do patch.ApplyTo obj
         with :? JsonPatchException as ex ->
-            raise (ValidationErrorException([ { Field = ex.FailedOperation.path; Issue = ex.Message } ]))
+            raise (
+                ValidationErrorException(
+                    [ { Field = ex.FailedOperation.path
+                        Issue = ex.Message } ]
+                )
+            )
 
     member this.ValidateObject(obj: 'a) : 'a =
         if this.TryValidateModel(obj) then
@@ -48,6 +55,7 @@ type LoggedController() =
                 |> Seq.map (fun kv ->
                     { Field = kv.Key
                       Issue = kv.Value.AttemptedValue })
+
             raise (ValidationErrorException(errors))
 
     member this.mapAsyncResult(x: Async<'a>) : Task<ActionResult> =

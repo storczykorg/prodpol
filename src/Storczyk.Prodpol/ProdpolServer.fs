@@ -1,37 +1,30 @@
 namespace Storczyk.Prodpol
 
 open System
-open System.Net
-open System.Text.Json.Serialization
-open Microsoft.AspNetCore.Authentication
-open Microsoft.AspNetCore.Authentication.Cookies
+open System.Text
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Builder
-open Microsoft.AspNetCore.DataProtection
-open Microsoft.AspNetCore.DataProtection.KeyManagement.Internal
+open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.Routing
+open Microsoft.AspNetCore.WebUtilities
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
+open Microsoft.Extensions.Logging
 open Npgsql
-open OpenTelemetry
-open OpenTelemetry.Metrics
-open OpenTelemetry.Trace
-open Storczyk.Database.Services
+open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
-open Storczyk.Prodpol.Core.Services
-open Storczyk.Prodpol.Core.Utils.RegisterServiceExtensions
-open Storczyk.Prodpol.Data.Services
-open Storczyk.Prodpol.Data.Services.Identity
-open Storczyk.Prodpol.Utils
+open Storczyk.Prodpol.ServiceSetup
+
+type AdminPasswordResetTokenRequest = { Email: string }
 
 type ProdpolServer() =
-    member this.Configure(builder: IHostApplicationBuilder): IHostApplicationBuilder =
-
+    member this.Configure(builder: IHostApplicationBuilder) : IHostApplicationBuilder =
         builder.Configuration.AddUserSecrets() |> ignore
 
         this.ConfigureServices(builder.Services)
-        //.NET Aspire specific method
+
         let enumMappings (dataSource: NpgsqlDataSourceBuilder) =
             dataSource.MapEnum<EmployeeOrderKeys>("prodpol.employee_ordering_keys")
             |> ignore
@@ -44,64 +37,65 @@ type ProdpolServer() =
         builder
 
     member this.ConfigureServices(services: IServiceCollection) =
-        let mainAs = typeof<ProdpolServer>.Assembly
-
         services
-            .AddControllers()
-            .AddMvcOptions(fun options ->
-                options.ModelBinderProviders.Insert(0, FSharpOptionModelBinderProvider())
-                ())
-            .AddJsonOptions(fun options ->
-                // Dodaj wsparcie dla typów F# (Option, Discriminated Unions, Records)
-                let fsharpConverter = JsonFSharpConverter(JsonFSharpOptions.FSharpLuLike())
-                options.JsonSerializerOptions.Converters.Insert(0, fsharpConverter))
-            .AddApplicationPart(mainAs)
+        |> ServiceControllers.configure
+        |> ServiceTelemetry.configure
+        |> ServiceAuthentication.configure
+        |> ServiceIdentity.configure
+        |> ServiceLinqToDb.configure
+        |> ServiceOther.configure
         |> ignore
 
-        services
-            .AddOpenTelemetry()
-            .WithLogging(fun logging -> logging |> ignore)
-            .WithMetrics(fun metrics ->
-                metrics.AddPrometheusExporter().AddAspNetCoreInstrumentation().AddNpgsqlInstrumentation()
-                |> ignore)
-            .WithTracing(fun tracing -> tracing.AddAspNetCoreInstrumentation().AddNpgsql() |> ignore)
-            .UseOtlpExporter()
-        |> ignore
-
-        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddBearerToken()
-            .AddCookie() |> ignore
-
-        services.AddDataProtection() |> ignore
-        services.AddSingleton<TimeProvider, ProdpolTimeProvider>() |> ignore
-        services.AddTransient<EmployeeSignInManager>() |> ignore
-
-        services
-            .AddIdentityCore<Employee>()
-            .AddDefaultTokenProviders()
-            .AddPasswordValidator<PasswordValidator<Employee>>()
-            .AddUserStore<PgEmployeeUserStore>()
-            .AddUserManager<UserManager<Employee>>()
-            .AddSignInManager<EmployeeSignInManager>()
-            .AddApiEndpoints()
-        |> ignore
-
-        services
-            .AddOpenApi("v0")
-            .AddPostgresUpgrader()
-            .AddSingleton(Snowflake.DefaultSnowflakeOptions)
-            .RegisterFromRuntime()
-        |> ignore
-
-        ()
-
-    member this.MapApplication(app: WebApplication): WebApplication =
+    member this.MapApplication(app: WebApplication) : WebApplication =
         app.UseRouting() |> ignore
 
         if app.Environment.IsDevelopment() then
             app.MapOpenApi("/openapi/{documentName}.yaml") |> ignore
 
-        app.MapGroup("/api").MapIdentityApi() |> ignore
+        app.MapGroup("/api/employee/auth").MapIdentityApi<Employee>() |> ignore
+
+        app.MapPost(
+            "/api/employee/auth/admin/reset-password-token",
+            Func<AdminPasswordResetTokenRequest, HttpContext, Task<IResult>>(fun req context ->
+                task {
+                    let userManager =
+                        context.RequestServices.GetRequiredService<UserManager<Employee>>()
+
+                    let logger = context.RequestServices.GetRequiredService<ILogger<ProdpolServer>>()
+                    let! user = userManager.FindByEmailAsync(req.Email)
+
+                    match box user with
+                    | null -> return Results.Ok()
+                    | _ ->
+                        let! token = userManager.GeneratePasswordResetTokenAsync(user)
+                        let encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token))
+                        logger.LogInformation("Admin password reset token for {Email}: {Token}", req.Email, encoded)
+                        return Results.Ok()
+                })
+        )
+        |> ignore
+
+        app.MapGet(
+            "/api/employee/auth/me",
+            Func<HttpContext, Task<IResult>>(fun context ->
+                task {
+                    let userManager =
+                        context.RequestServices.GetRequiredService<UserManager<Employee>>()
+
+                    let employeesRead =
+                        context.RequestServices.GetRequiredService<IEmployeesReadRepository>()
+
+                    let userIdStr = userManager.GetUserId(context.User)
+
+                    if String.IsNullOrEmpty(userIdStr) then
+                        return Results.Unauthorized()
+                    else
+                        let userId = Int64.Parse(userIdStr)
+                        let! employee = employeesRead.GetByIdAsync(userId)
+                        return Results.Ok(employee)
+                })
+        )
+        |> ignore
 
         app.UseAuthorization() |> ignore
         app.MapControllers() |> ignore
@@ -109,7 +103,7 @@ type ProdpolServer() =
         app.UseOpenTelemetryPrometheusScrapingEndpoint() |> ignore
         app
 
-    member this.Build(args: string array): WebApplication =
+    member this.Build(args: string array) : WebApplication =
         let builder = WebApplication.CreateBuilder(args)
 
         this.Configure builder |> ignore
@@ -132,7 +126,7 @@ type ProdpolServer() =
         app.Start()
         app
 
-    member this.WebApplicationBuilder(args: string array): WebApplicationBuilder =
+    member this.WebApplicationBuilder(args: string array) : WebApplicationBuilder =
         let builder = WebApplication.CreateBuilder(args)
 
         this.Configure builder |> ignore

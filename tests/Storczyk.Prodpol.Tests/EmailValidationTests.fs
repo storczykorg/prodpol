@@ -3,7 +3,8 @@ module Storczyk.Prodpol.Tests.EmailValidationTests
 open System.Text.RegularExpressions
 open NUnit.Framework
 
-let emailRegex = """^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$"""
+let emailRegex =
+    """^(([a-zA-Z\-_.+/]+)|("([+.a-zA-Z_\-]+)"))+@([a-zA-Z]+)(\.([a-zA-Z])+)*$"""
 
 [<TestCase("nowaczka@gmail.com")>]
 [<TestCase("test@example.com")>]

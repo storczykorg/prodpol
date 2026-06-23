@@ -28,15 +28,19 @@ let Test1 () =
     let repoMock = Mock<IEmployeeRoleRepository>()
 
     let readRepoMock = Mock<IEmployeeRoleReadRepository>()
+
     readRepoMock
         .Setup(fun (m: IEmployeeRoleReadRepository) -> m.GetAllAsync(It.IsAny<CancellationToken>()))
         .Returns(fun (_: CancellationToken) -> async { return asyncSeq { yield role } })
-        |> ignore
+    |> ignore
 
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-    let controller = EmployeesRolesController(readRepoMock.Object, repoMock.Object, loggerMock.Object)
+
+    let controller =
+        EmployeesRolesController(readRepoMock.Object, repoMock.Object, loggerMock.Object)
 
     let result = controller.GetAll(CancellationToken.None).Result
+
     match result with
     | :? OkObjectResult as ok ->
         let value = ok.Value :?> AsyncSeq<EmployeeRole>
@@ -46,13 +50,17 @@ let Test1 () =
 
     // Test: GetById NotFound
     let repoMock2 = Mock<IEmployeeRoleRepository>()
+
     repoMock2
         .Setup(fun m -> m.GetByIdAsync(It.IsAny<string>()))
         .Returns(fun (_: string) -> async { return raise (NotFoundException "Resource not found.") })
-        |> ignore
+    |> ignore
 
     let readRepoMock2 = Mock<IEmployeeRoleReadRepository>()
-    let controller2 = EmployeesRolesController(readRepoMock2.Object, repoMock2.Object, loggerMock.Object)
+
+    let controller2 =
+        EmployeesRolesController(readRepoMock2.Object, repoMock2.Object, loggerMock.Object)
+
     let result2 = controller2.GetById("missing").Result
     Assert.That(result2, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult for GetById")
 
@@ -66,15 +74,19 @@ let GetAll_ReturnsOkWithRoles () =
     let repoMock = Mock<IEmployeeRoleRepository>()
 
     let readRepoMock = Mock<IEmployeeRoleReadRepository>()
+
     readRepoMock
         .Setup(fun (m: IEmployeeRoleReadRepository) -> m.GetAllAsync(It.IsAny<CancellationToken>()))
         .Returns(fun (_: CancellationToken) -> async { return asyncSeq { yield role } })
-        |> ignore
+    |> ignore
 
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-    let controller = EmployeesRolesController(readRepoMock.Object, repoMock.Object, loggerMock.Object)
+
+    let controller =
+        EmployeesRolesController(readRepoMock.Object, repoMock.Object, loggerMock.Object)
 
     let result = controller.GetAll(CancellationToken.None).Result
+
     match result with
     | :? OkObjectResult as ok ->
         let value = ok.Value :?> AsyncSeq<EmployeeRole>
@@ -86,13 +98,16 @@ let GetAll_ReturnsOkWithRoles () =
 [<Test>]
 let GetById_ReturnsNotFound () =
     let repoMock = Mock<IEmployeeRoleRepository>()
+
     repoMock
         .Setup(fun m -> m.GetByIdAsync(It.IsAny<string>()))
         .Returns(fun (_: string) -> async { return raise (NotFoundException "Resource not found.") })
-        |> ignore
+    |> ignore
 
     let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-    let controller = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
+
+    let controller =
+        EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
     let result = controller.GetById("missing").Result
     Assert.That(result, Is.TypeOf<NotFoundResult>(), "Expected NotFoundResult")
@@ -112,13 +127,16 @@ type EmployeesRolesControllerFixture() =
         let repoMock = Mock<IEmployeeRoleRepository>()
 
         let readRepoMock = Mock<IEmployeeRoleReadRepository>()
+
         readRepoMock
             .Setup(fun (m: IEmployeeRoleReadRepository) -> m.GetAllAsync(It.IsAny<CancellationToken>()))
             .Returns(fun (_: CancellationToken) -> async { return asyncSeq { yield role } })
-            |> ignore
+        |> ignore
 
         let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-        let controller = EmployeesRolesController(readRepoMock.Object, repoMock.Object, loggerMock.Object)
+
+        let controller =
+            EmployeesRolesController(readRepoMock.Object, repoMock.Object, loggerMock.Object)
 
         let result = controller.GetAll(CancellationToken.None).Result
 
@@ -132,13 +150,16 @@ type EmployeesRolesControllerFixture() =
     [<Test>]
     member _.GetById_ReturnsNotFound() =
         let repoMock = Mock<IEmployeeRoleRepository>()
+
         repoMock
             .Setup(fun m -> m.GetByIdAsync(It.IsAny<string>()))
             .Returns(fun (_: string) -> async { return raise (NotFoundException "Resource not found.") })
-            |> ignore
+        |> ignore
 
         let loggerMock = Mock<ILogger<EmployeesRolesController>>()
-        let controller = EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
+
+        let controller =
+            EmployeesRolesController(Mock<IEmployeeRoleReadRepository>().Object, repoMock.Object, loggerMock.Object)
 
         let result = controller.GetById("missing").Result
 

@@ -26,7 +26,8 @@ module ProgramMigration =
             false
         else
             true
-    let applySeeding (app: WebApplication): bool =
+
+    let applySeeding (app: WebApplication) : bool =
         use scope = app.Services.CreateScope()
         let upgrader = scope.ServiceProvider.GetRequiredService<PostgresSeedUpgrader>()
 
@@ -37,7 +38,8 @@ module ProgramMigration =
             false
         else
             true
-    let nukeDb (app: WebApplication): bool =
+
+    let nukeDb (app: WebApplication) : bool =
         use scope = app.Services.CreateScope()
         let upgrader = scope.ServiceProvider.GetRequiredService<PostgresNuke>()
 

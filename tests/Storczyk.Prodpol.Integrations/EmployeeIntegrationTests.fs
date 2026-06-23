@@ -61,8 +61,7 @@ let ``GET /api/data/employees/26 returns mocked employee`` () =
             .BuildTest(
                 [||],
                 fun s ->
-                    s.AddSingleton<IEmployeesReadRepository>(mockRepo.Object)
-                    |> ignore
+                    s.AddSingleton<IEmployeesReadRepository>(mockRepo.Object) |> ignore
                     ()
             )
 
@@ -93,9 +92,12 @@ let ``POST /api/data/employees/ creates employee and returns 200`` () =
     let snowflakeId = 999L
 
     let snowMock = Mock<ISnowflakeGenerator>()
-    snowMock.Setup(fun m -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(snowflakeId) |> ignore
+
+    snowMock.Setup(fun m -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(snowflakeId)
+    |> ignore
 
     let employeesRepo = Mock<IEmployeesRepository>()
+
     employeesRepo
         .Setup(fun (m: IEmployeesRepository) -> m.AddAsync(It.IsAny<Employee>()))
         .Returns(fun (_: Employee) -> async { return () })
@@ -114,15 +116,16 @@ let ``POST /api/data/employees/ creates employee and returns 200`` () =
     createdEmp.CreatedAt <- DateTime.UtcNow
 
     let employeesReadRepo = Mock<IEmployeesReadRepository>()
+
     employeesReadRepo
         .Setup(fun (m: IEmployeesReadRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return createdEmp })
     |> ignore
 
     let passwordHasher = Mock<IPasswordHasher<Employee>>()
-    passwordHasher
-        .Setup(fun m -> m.HashPassword(It.IsAny<Employee>(), It.IsAny<string>()))
-        .Returns("hashed-pwd") |> ignore
+
+    passwordHasher.Setup(fun m -> m.HashPassword(It.IsAny<Employee>(), It.IsAny<string>())).Returns("hashed-pwd")
+    |> ignore
 
     use server =
         ProdpolServer()
@@ -139,15 +142,18 @@ let ``POST /api/data/employees/ creates employee and returns 200`` () =
     use client = getClient server
 
     let body =
-        JsonSerializer.Serialize({|
-            email = "new@example.com"
-            nameFirst = "New"
-            nameLast = "Employee"
-            phoneNumber = "+48111111111"
-        |})
+        JsonSerializer.Serialize(
+            {| email = "new@example.com"
+               nameFirst = "New"
+               nameLast = "Employee"
+               phoneNumber = "+48111111111" |}
+        )
 
     let content = new StringContent(body, System.Text.Encoding.UTF8, "application/json")
-    let resp = client.PostAsync("http://localhost:5000/api/data/employees/", content).Result
+
+    let resp =
+        client.PostAsync("http://localhost:5000/api/data/employees/", content).Result
+
     Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK))
 
     let respBody = resp.Content.ReadAsStringAsync().Result
@@ -168,6 +174,7 @@ let ``PATCH /api/data/employees/1 updates employee name`` () =
     existingEmp.PhoneNumber <- "+48123456789"
 
     let employeesRepo = Mock<IEmployeesRepository>()
+
     employeesRepo
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return existingEmp })
@@ -196,7 +203,10 @@ let ``PATCH /api/data/employees/1 updates employee name`` () =
 
     let patchBody = """[{"op":"replace","path":"/nameFirst","value":"UpdatedName"}]"""
     let content = new StringContent(patchBody, System.Text.Encoding.UTF8, "text/json")
-    let resp = client.PatchAsync("http://localhost:5000/api/data/employees/1", content).Result
+
+    let resp =
+        client.PatchAsync("http://localhost:5000/api/data/employees/1", content).Result
+
     Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK))
 
     let respBody = resp.Content.ReadAsStringAsync().Result
@@ -207,6 +217,7 @@ let ``PATCH /api/data/employees/1 updates employee name`` () =
 [<Test>]
 let ``PATCH /api/data/employees/999 returns 404`` () =
     let employeesRepo = Mock<IEmployeesRepository>()
+
     employeesRepo
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return raise (NotFoundException "Resource not found.") })
@@ -230,5 +241,8 @@ let ``PATCH /api/data/employees/999 returns 404`` () =
 
     let patchBody = """[{"op":"replace","path":"/nameFirst","value":"UpdatedName"}]"""
     let content = new StringContent(patchBody, System.Text.Encoding.UTF8, "text/json")
-    let resp = client.PatchAsync("http://localhost:5000/api/data/employees/999", content).Result
+
+    let resp =
+        client.PatchAsync("http://localhost:5000/api/data/employees/999", content).Result
+
     Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.NotFound))

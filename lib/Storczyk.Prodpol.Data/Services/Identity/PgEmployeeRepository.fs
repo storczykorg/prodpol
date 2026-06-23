@@ -48,11 +48,11 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 let sql =
                     // language=postgresql
                     "INSERT INTO prodpol.employees
-                    (employee_id, name_first, name_last, email, phone_number, password_hash)
+                    (employee_id, name_first, name_last, email, phone_number, password_hash, security_stamp)
                     VALUES
                         (@newKey, @nameFirst,
                          @nameLast, @email,
-                         @phoneNumber, @passwordHash);"
+                         @phoneNumber, @passwordHash, @securityStamp);"
 
                 let! result: int =
                     wrapTask (
@@ -63,7 +63,8 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                                nameLast = entity.NameLast
                                email = entity.Email
                                phoneNumber = entity.PhoneNumber
-                               passwordHash = entity.PasswordHash |> Option.defaultValue null |}
+                               passwordHash = entity.PasswordHash |> Option.defaultValue null
+                               securityStamp = entity.SecurityStamp |> Option.defaultValue null |}
                         ))
 
                 match result with
@@ -77,32 +78,49 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
             }
 
         member this.DeleteAsync(key) =
+            let isForeignKeyError (ex: exn): bool =
+                match ex with
+                | :? NpgsqlException as e when e.SqlState = "23502" -> true
+                | _ -> false
             async {
                 try
                     let! ct = Async.CancellationToken
                     use! conn = dataSource.OpenConnectionAsync(ct)
                     use! scope = conn.BeginTransactionAsync(ct)
                     let! result =
-                        wrapTask (
                             conn.ExecuteAsync(
                                 // language=postgresql
                                 "DELETE FROM prodpol.employees
                                 WHERE employee_id = (@id);",
                                 {| id = key |}
                             )
-                        )
                     match result with
                     | 0 ->
+                        do! scope.RollbackAsync()
                         return raise (NotFoundException "Resource not found.")
                     | 1 ->
+                        do! scope.CommitAsync(ct)
                         return ()
                     | _ ->
+                        do! scope.RollbackAsync()
                         return raise (
                             InvalidOperationException
                                 "Expected affected rows to be a value between 0 and 1. Evaluate query"
                         )
-                with :? PostgresException as ex when ex.SqlState = "23502" ->
+                with
+                | :? PostgresException as ex when isForeignKeyError(ex) ->
                     raise (ReferentialIntegrityException(ex.TableName, ex.ColumnName, ex))
+                | :? AggregateException as exs when (exs.InnerExceptions |> Seq.forall(isForeignKeyError)) ->
+                    raise (ReferentialIntegrityException("Muliple foreign resource depend on the object", "", AggregateException(
+                                                             "",
+                                                             seq {
+                                                                 for item in exs.InnerExceptions do
+                                                                     let ex = (item :?> PostgresException)
+                                                                     yield (ReferentialIntegrityException (
+                                                                                ex . TableName, ex . ColumnName,
+                                                                                ex)) :> exn;
+                                                             })))
+
             }
 
         member this.GetAllAsync(token) =
@@ -176,7 +194,9 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                             name_last = @nameLast,
                             email = @email,
                             phone_number = @phoneNumber,
-                            password_hash = @passwordHash
+                            password_hash = @passwordHash,
+                            security_stamp = @securityStamp,
+                            email_confirmed = @emailConfirmed
                         WHERE employee_id = @oldId;",
                         {| oldId = key
                            newKey = entity.Id
@@ -184,7 +204,9 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                            nameLast = entity.NameLast
                            email = entity.Email
                            phoneNumber = entity.PhoneNumber
-                           passwordHash = entity.PasswordHash |> Option.defaultValue null |}
+                           passwordHash = entity.PasswordHash |> Option.defaultValue null
+                           securityStamp = entity.SecurityStamp |> Option.defaultValue null
+                           emailConfirmed = entity.EmailConfirmed |}
                     ))
                 with
                 | 0 ->
@@ -207,20 +229,7 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                 let! results =
                     wrapTask (
                         conn.QueryAsync<EmployeeRead>(
-                            """SELECT employee_id, 
-                                    employees.role_id, 
-                                    email, 
-                                    normalized_email, 
-                                    name_first, 
-                                    name_last, 
-                                    full_name, 
-                                    normalized_name, 
-                                    phone_number, 
-                                    password_hash, 
-                                    created_at, 
-                                    enabled, 
-                                    display_name, 
-                                    role_name 
+                            """SELECT *
                                 FROM prodpol.employees
                             LEFT JOIN prodpol.employee_roles er on employees.role_id = er.role_id
                             ORDER BY employee_id

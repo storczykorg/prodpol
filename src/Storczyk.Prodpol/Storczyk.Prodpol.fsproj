@@ -19,7 +19,14 @@
         <Compile Include="Controllers\Data\EmployeesController.fs" />
         <Compile Include="Controllers\Data\EmployeeRolesController.fs" />
         <Compile Include="Controllers\Data\EmployeePhotosController.fs" />
-        <Compile Include="Controllers\Data\CustomerSpendingController.fs" /><Compile Include="applyMigrations.fs" /><Compile Include="SqlMappings.fs" /><Compile Include="ProdpolServer.fs" />
+        <Compile Include="Controllers\Data\CustomerSpendingController.fs" /><Compile Include="applyMigrations.fs" /><Compile Include="SqlMappings.fs" />
+        <Compile Include="ServiceSetup\Controllers.fs" />
+        <Compile Include="ServiceSetup\Telemetry.fs" />
+        <Compile Include="ServiceSetup\Authentication.fs" />
+        <Compile Include="ServiceSetup\Identity.fs" />
+        <Compile Include="ServiceSetup\LinqToDb.fs" />
+        <Compile Include="ServiceSetup\Other.fs" />
+        <Compile Include="ProdpolServer.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
@@ -33,6 +40,7 @@
         <PackageReference Include="Aspire.Npgsql" Version="13.4.6" />
         <PackageReference Update="FSharp.Core" Version="10.1.300" />
         <PackageReference Include="FSharp.SystemTextJson" Version="1.4.36" />
+        <PackageReference Include="linq2db.AspNet" Version="5.4.1.9" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch.SystemTextJson" Version="10.0.8" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />

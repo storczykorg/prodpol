@@ -1,11 +1,14 @@
 ﻿namespace Storczyk.Prodpol.Controllers.Data
 
 open System
+open System.Collections.Generic
 open System.Linq
+open System.Security.Claims
 open System.Threading
 open System.Threading.Tasks
 open System.Transactions
 open FSharp.Control
+open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson.Exceptions
@@ -62,6 +65,17 @@ type EmployeesController
     [<Route("count")>]
     member this.GetCount(token: CancellationToken) =
         employeesRead.CountAsync(token) |> this.mapAsyncResult
+
+    [<HttpGet>]
+    [<Route("me")>]
+    member this.GetMe() =
+        async {
+            if ((null = this.User) || (not(this.User.HasClaim(fun x -> x.Type = ClaimTypes.NameIdentifier)))) then
+                return (raise (KeyNotFoundException("Nie znaleziono identyfikatora użytkownika")))
+            else
+                let userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier) |> Int64.Parse
+                return! employeesRead.GetByIdAsync(userId)
+        } |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("{id:long}")>]

@@ -2,84 +2,106 @@ namespace Storczyk.Prodpol.Core.Services
 
 open System
 open System.Linq
-open Dapper
-open Npgsql
-open Storczyk.Async
+open System.Threading
+open LinqToDB
+open LinqToDB.Async
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
-open Storczyk.Prodpol.Core.Models.UtilHelpers
 open Storczyk.Prodpol.Core.Utils
+open Storczyk.Prodpol.Data.Services.Identity
 
 [<RegisterAsTransient(typeof<IEmployeeSearchRepository>)>]
-type PgEmployeeSearchRepository(dataSource: NpgsqlDataSource) =
+type PgEmployeeSearchRepository(db: IIdentityDatabase) =
+
+    let buildFilteredQuery (fullName: string) (email: string) (phoneNumber: string) (roleNames: string array) =
+        let q =
+            query {
+                for emp in db.EmployeeRead do
+                    where (fullName = "" || emp.NormalizedName.Contains(fullName))
+                    where (email = "" || emp.Email.Contains(email))
+                    where (phoneNumber = "" || emp.PhoneNumber.Contains(phoneNumber))
+                    select emp
+            }
+
+        if roleNames.Length = 0 then
+            q
+        else
+            let roleNameFilter =
+                roleNames
+                |> Array.map (fun n ->
+                    let safe = n.Replace("'", "''")
+                    $"\"role_name\" = '{safe}'")
+                |> String.concat " OR "
+
+            q.Where(fun e -> Sql.Expr<bool>($"({roleNameFilter})"))
+
+    let buildOrderedQuery (q: IQueryable<EmployeeRead>) (key: EmployeeOrderKeys) (asc: bool) =
+        match key, asc with
+        | EmployeeOrderKeys.FullName, true ->
+            q.OrderBy(fun e -> e.NormalizedName).ThenBy(fun e -> e.RoleName).ThenBy(fun e -> e.Id)
+        | EmployeeOrderKeys.FullName, false ->
+            q
+                .OrderByDescending(fun e -> e.NormalizedName)
+                .ThenByDescending(fun e -> e.RoleName)
+                .ThenByDescending(fun e -> e.Id)
+        | EmployeeOrderKeys.Email, true ->
+            q.OrderBy(fun e -> e.NormalizedEmail).ThenBy(fun e -> e.RoleName).ThenBy(fun e -> e.Id)
+        | EmployeeOrderKeys.Email, false ->
+            q
+                .OrderByDescending(fun e -> e.NormalizedEmail)
+                .ThenByDescending(fun e -> e.RoleName)
+                .ThenByDescending(fun e -> e.Id)
+        | EmployeeOrderKeys.PhoneNumber, true ->
+            q.OrderBy(fun e -> e.PhoneNumber).ThenBy(fun e -> e.RoleName).ThenBy(fun e -> e.Id)
+        | EmployeeOrderKeys.PhoneNumber, false ->
+            q
+                .OrderByDescending(fun e -> e.PhoneNumber)
+                .ThenByDescending(fun e -> e.RoleName)
+                .ThenByDescending(fun e -> e.Id)
+        | EmployeeOrderKeys.RoleName, true -> q.OrderBy(fun e -> e.RoleName).ThenBy(fun e -> e.Id)
+        | EmployeeOrderKeys.RoleName, false -> q.OrderByDescending(fun e -> e.RoleName).ThenByDescending(fun e -> e.Id)
+        | _, true -> q.OrderBy(fun e -> e.Id).ThenBy(fun e -> e.Id)
+        | _, false -> q.OrderByDescending(fun e -> e.Id).ThenByDescending(fun e -> e.Id)
+
+    let countResults (q: IQueryable<EmployeeRead>) (token: CancellationToken) =
+        async {
+            let! count = q.LongCountAsync(token) |> Async.AwaitTask
+            return int count
+        }
+
     interface IEmployeeSearchRepository with
         member this.CountSearchAsync(options: EmployeeSearchOption, token) =
             async {
-                let! conn = dataSource.OpenConnectionAsync(token)
+                let fullName = options.fullName |> Option.defaultValue ""
+                let email = options.email |> Option.defaultValue ""
+                let phoneNumber = options.phoneNumber |> Option.defaultValue ""
+                let roleNames = options.roleNames |> Option.defaultValue [||]
 
-                let sql = """SELECT count(*) FROM prodpol.filtered_employees(
-                                _fullname := (@fullName)::varchar,
-                                _email := (@email)::varchar,
-                                _phone_number := (@phoneNumber)::varchar,
-                                _role_names := (@roleNames)::varchar array
-                                );
-                            """
-                let param = {|
-                                email = options.email |> Option.defaultValue "";
-                                phoneNumber = options.phoneNumber |> Option.defaultValue "";
-                                fullname = options.fullName |> Option.defaultValue "";
-                                roleNames = options.roleNames |> Option.defaultValue [||] |}
-
-                return!
-                    wrapTask
-                        (conn.QuerySingleAsync<int>(
-                             sql,
-                            param = param
-                            )
-                        )
+                return! countResults (buildFilteredQuery fullName email phoneNumber roleNames) token
             }
 
         member this.SearchAsync(options: EmployeeSearchOption, token) =
             async {
-                use! conn = dataSource.OpenConnectionAsync(token)
+                let fullName = options.fullName |> Option.defaultValue ""
+                let email = options.email |> Option.defaultValue ""
+                let phoneNumber = options.phoneNumber |> Option.defaultValue ""
+                let roleNames = options.roleNames |> Option.defaultValue [||]
+                let orderKey = options.orderBy |> Option.defaultValue EmployeeOrderKeys.EmployeeId
 
-                let sql =
-                    """SELECT * FROM prodpol.ordered_employees(
-                                _asc := (@asc)::boolean,
-                                _fullname := (@fullName)::varchar,
-                                _email := (@email)::varchar,
-                                _phone_number := (@phoneNumber)::varchar,
-                                _ordering_key := (@orderBy)::prodpol.employee_ordering_keys,
-                                _role_names := (@roleNames)::varchar array
-                                )
-                        offset (@skip)::integer
-                        limit (@limit)::integer;
-                            """
+                let filtered = buildFilteredQuery fullName email phoneNumber roleNames
+                let ordered = buildOrderedQuery filtered orderKey options.asc
 
-                let! _emps: EmployeeRead seq = conn.QueryAsync<EmployeeRead>(
-                                         sql,
-                                         param = {|
-                                                orderBy =
-                                                    ((options.orderBy |> Option.defaultValue EmployeeOrderKeys.EmployeeId)
-                                                     |> GetSqlName)
-                                                limit = options.limit
-                                                skip = options.skip
-                                                asc = options.asc
-                                                email = options.email |> Option.defaultValue ""
-                                                phoneNumber = options.phoneNumber |> Option.defaultValue ""
-                                                fullname = options.fullName |> Option.defaultValue ""
-                                                roleNames = options.roleNames |> Option.defaultValue [||]
-                                            |}
-                                        )
-                let emps = _emps.ToArray()
+                let! page =
+                    ordered.Skip(options.skip).Take(options.limit).ToArrayAsync(token)
+                    |> Async.AwaitTask
 
-                let! _count = (this :> IEmployeeSearchRepository).CountSearchAsync(options, token)
-                let count = int64(_count)
+                let! total = countResults filtered token
 
-                let nextCursor = if emps.Length > 0 then Some (emps.LongLength + int64(options.skip)) else None
+                let nextCursor =
+                    if page.Length > 0 && int64 options.skip + page.LongLength < total then
+                        Some(page.LongLength + int64 options.skip)
+                    else
+                        None
 
-                let result = EmployeeSearchResult(results = emps,
-                                            nextCursor = nextCursor,
-                                            total = count)
-                return result
+                return EmployeeSearchResult(results = page, nextCursor = nextCursor, total = total)
             }

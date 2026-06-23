@@ -4,4 +4,5 @@ open System
 
 [<Serializable>]
 [<AttributeUsage(AttributeTargets.Class ||| AttributeTargets.Struct, Inherited = true)>]
-type ProdpolModelAttribute() = inherit Attribute()
+type ProdpolModelAttribute() =
+    inherit Attribute()

@@ -54,16 +54,16 @@ type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
                         {| id = key |}
                     )
                 with
-                | 0 ->
-                    return raise (NotFoundException "Resource not found.")
+                | 0 -> return raise (NotFoundException "Resource not found.")
                 | 1 ->
                     do! scope.CommitAsync()
                     return ()
                 | _ ->
-                    return raise (
-                        InvalidOperationException
-                            "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                    )
+                    return
+                        raise (
+                            InvalidOperationException
+                                "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                        )
             }
 
         member this.GetAllAsync(token) =
@@ -100,7 +100,7 @@ type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
                 return emp
             }
 
-        member this.UpdateAsync (key, entity) =
+        member this.UpdateAsync(key, entity) =
             async {
                 let! ct = Async.CancellationToken
                 let! conn = dataSource.OpenConnectionAsync(ct)
@@ -122,15 +122,15 @@ type PgEmployeeRoleRepository(dataSource: NpgsqlDataSource) =
                            displayName = entity.DisplayName |}
                     )
                 with
-                | 0 ->
-                    return raise (NotFoundException "Resource not found.")
+                | 0 -> return raise (NotFoundException "Resource not found.")
                 | 1 ->
                     do! scope.CommitAsync()
                     return ()
                 | _ ->
-                    return raise (
-                        InvalidOperationException
-                            "Expected affected rows to be a value between 0 and 1. Evaluate query"
-                    )
+                    return
+                        raise (
+                            InvalidOperationException
+                                "Expected affected rows to be a value between 0 and 1. Evaluate query"
+                        )
 
             }

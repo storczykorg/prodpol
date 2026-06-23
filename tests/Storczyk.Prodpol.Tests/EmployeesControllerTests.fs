@@ -45,7 +45,10 @@ let ``Search returns Ok with results`` () =
     |> ignore
 
     let employeesMock: Mock<IEmployeesRepository> = Mock<IEmployeesRepository>()
-    let employeesReadMock: Mock<IEmployeesReadRepository> = Mock<IEmployeesReadRepository>()
+
+    let employeesReadMock: Mock<IEmployeesReadRepository> =
+        Mock<IEmployeesReadRepository>()
+
     let snowMock = Mock<ISnowflakeGenerator>()
 
     let loggerMock: Mock<ILogger<EmployeesController>> =
@@ -76,7 +79,8 @@ let ``Search returns NotFound when repository returns NotFound`` () =
     repoMock
         .Setup(fun (m: IEmployeeSearchRepository) ->
             m.SearchAsync(It.IsAny<EmployeeSearchOption>(), It.IsAny<CancellationToken>()))
-        .Returns(fun (_: EmployeeSearchOption) (_: CancellationToken) -> async { return raise (NotFoundException "Resource not found.") })
+        .Returns(fun (_: EmployeeSearchOption) (_: CancellationToken) ->
+            async { return raise (NotFoundException "Resource not found.") })
     |> ignore
 
     let employeesMock = Mock<IEmployeesRepository>()
@@ -108,6 +112,7 @@ let ``Create returns Ok with EmployeeRead`` () =
     let snowflakeId = 100L
 
     let employeesRepoMock = Mock<IEmployeesRepository>()
+
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.AddAsync(It.IsAny<Employee>()))
         .Returns(fun (_: Employee) -> async { return () })
@@ -121,13 +126,16 @@ let ``Create returns Ok with EmployeeRead`` () =
     expectedEmp.PhoneNumber <- "+48123456789"
 
     let employeesReadRepoMock = Mock<IEmployeesReadRepository>()
+
     employeesReadRepoMock
         .Setup(fun (m: IEmployeesReadRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return expectedEmp })
     |> ignore
 
     let snowMock = Mock<ISnowflakeGenerator>()
-    snowMock.Setup(fun (m: ISnowflakeGenerator) -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(snowflakeId) |> ignore
+
+    snowMock.Setup(fun (m: ISnowflakeGenerator) -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(snowflakeId)
+    |> ignore
 
     let loggerMock = Mock<ILogger<EmployeesController>>()
 
@@ -136,7 +144,9 @@ let ``Create returns Ok with EmployeeRead`` () =
 
     setupControllerValidation controller
 
-    let passwordHasherMock = Mock<Microsoft.AspNetCore.Identity.IPasswordHasher<Employee>>()
+    let passwordHasherMock =
+        Mock<Microsoft.AspNetCore.Identity.IPasswordHasher<Employee>>()
+
     passwordHasherMock
         .Setup(fun (m: Microsoft.AspNetCore.Identity.IPasswordHasher<Employee>) ->
             m.HashPassword(It.IsAny<Employee>(), It.IsAny<string>()))
@@ -168,9 +178,14 @@ let ``Create returns BadRequest when email already exists`` () =
 
     let snowflakeId = 100L
     let errors = System.Collections.Generic.List<ValidationErrorDetail>()
-    errors.Add({ Field = "Email"; Issue = "Email is already present" })
+
+    errors.Add(
+        { Field = "Email"
+          Issue = "Email is already present" }
+    )
 
     let employeesRepoMock = Mock<IEmployeesRepository>()
+
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.AddAsync(It.IsAny<Employee>()))
         .Returns(fun (_: Employee) -> async { return raise (ValidationErrorException errors) })
@@ -178,7 +193,9 @@ let ``Create returns BadRequest when email already exists`` () =
 
     let employeesReadRepoMock = Mock<IEmployeesReadRepository>()
     let snowMock = Mock<ISnowflakeGenerator>()
-    snowMock.Setup(fun (m: ISnowflakeGenerator) -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(snowflakeId) |> ignore
+
+    snowMock.Setup(fun (m: ISnowflakeGenerator) -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(snowflakeId)
+    |> ignore
 
     let loggerMock = Mock<ILogger<EmployeesController>>()
 
@@ -187,7 +204,9 @@ let ``Create returns BadRequest when email already exists`` () =
 
     setupControllerValidation controller
 
-    let passwordHasherMock = Mock<Microsoft.AspNetCore.Identity.IPasswordHasher<Employee>>()
+    let passwordHasherMock =
+        Mock<Microsoft.AspNetCore.Identity.IPasswordHasher<Employee>>()
+
     passwordHasherMock
         .Setup(fun (m: Microsoft.AspNetCore.Identity.IPasswordHasher<Employee>) ->
             m.HashPassword(It.IsAny<Employee>(), It.IsAny<string>()))
@@ -217,6 +236,7 @@ let ``Update returns Ok with patched EmployeeRead`` () =
     existingEmp.PhoneNumber <- "+48123456789"
 
     let employeesRepoMock = Mock<IEmployeesRepository>()
+
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return existingEmp })
@@ -240,8 +260,7 @@ let ``Update returns Ok with patched EmployeeRead`` () =
     |> ignore
 
     // Act
-    let actionResult: ActionResult =
-        controller.Update(employeeId, patch).Result
+    let actionResult: ActionResult = controller.Update(employeeId, patch).Result
 
     // Assert
     match actionResult with
@@ -257,6 +276,7 @@ let ``Update returns NotFound when employee missing`` () =
     let employeeId = 999L
 
     let employeesRepoMock = Mock<IEmployeesRepository>()
+
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return raise (NotFoundException "Resource not found.") })
@@ -273,8 +293,7 @@ let ``Update returns NotFound when employee missing`` () =
     let patch = JsonSerializer.Deserialize<JsonPatchDocument<Employee>>(patchJson)
 
     // Act
-    let actionResult: ActionResult =
-        controller.Update(employeeId, patch).Result
+    let actionResult: ActionResult = controller.Update(employeeId, patch).Result
 
     // Assert
     Assert.That(actionResult, Is.TypeOf<NotFoundResult>())
@@ -292,6 +311,7 @@ let ``Update returns BadRequest on invalid JSON Patch`` () =
     existingEmp.PhoneNumber <- "+48123456789"
 
     let employeesRepoMock = Mock<IEmployeesRepository>()
+
     employeesRepoMock
         .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return existingEmp })
@@ -315,8 +335,7 @@ let ``Update returns BadRequest on invalid JSON Patch`` () =
     |> ignore
 
     // Act
-    let actionResult: ActionResult =
-        controller.Update(employeeId, patch).Result
+    let actionResult: ActionResult = controller.Update(employeeId, patch).Result
 
     // Assert
     match actionResult with

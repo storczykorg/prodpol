@@ -15,7 +15,11 @@ let toIdentityErrors (ex: System.Exception) : IdentityError seq =
                 yield IdentityError(Code = $"ValidationError_{e.Field}", Description = e.Issue)
 
         | :? System.InvalidOperationException ->
-            yield IdentityError(Code = "ConcurrencyFailure", Description = "Optimistic concurrency failure, object has been modified.")
+            yield
+                IdentityError(
+                    Code = "ConcurrencyFailure",
+                    Description = "Optimistic concurrency failure, object has been modified."
+                )
 
         | :? System.TimeoutException ->
             yield IdentityError(Code = "Timeout", Description = "The database connection timed out.")
@@ -23,8 +27,7 @@ let toIdentityErrors (ex: System.Exception) : IdentityError seq =
         | :? System.OperationCanceledException ->
             yield IdentityError(Code = "Cancelled", Description = "The operation was cancelled.")
 
-        | _ ->
-            yield IdentityError(Code = "UnknownError", Description = ex.Message)
+        | _ -> yield IdentityError(Code = "UnknownError", Description = ex.Message)
     }
 
 let toIdentityResult (ex: System.Exception) : IdentityResult =

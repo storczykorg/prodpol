@@ -8,36 +8,34 @@ open Storczyk.Prodpol.Core.Utils
 
 [<Serializable; CLIMutable>]
 [<ProdpolModel>]
-[<Table("prodpol.products")>]
+[<Table(Name = "products", Schema = "prodpol")>]
 type Product =
-    {
-        [<PrimaryKey; Column("product_id")>]
-        Id: int64
+    { [<PrimaryKey; Column("product_id")>]
+      Id: int64
 
-        [<Column("product_name"); MaxLength(255)>]
-        Name: string
+      [<Column("product_name"); MaxLength(255)>]
+      Name: string
 
-        [<Column("created_at")>]
-        CreatedAt: DateTime
+      [<Column("created_at")>]
+      CreatedAt: DateTime
 
-        [<Column("created_by")>]
-        CreatedBy: int64
+      [<Column("created_by")>]
+      CreatedBy: int64
 
-        [<Column("last_modified_by")>]
-        LastModifiedBy: int64
+      [<Column("last_modified_by")>]
+      LastModifiedBy: int64
 
-        [<Column("last_modified_at")>]
-        LastModifiedAt: DateTime
+      [<Column("last_modified_at")>]
+      LastModifiedAt: DateTime
 
-        [<Column("price")>]
-        Price: decimal
+      [<Column("price")>]
+      Price: decimal
 
-        [<Column("unit_type")>]
-        UnitType: int
+      [<Column("unit_type")>]
+      UnitType: int
 
-        [<Column("available_amount")>]
-        AvailableAmount: int
+      [<Column("available_amount")>]
+      AvailableAmount: int
 
-        [<Column("unit_base"); >]
-        UnitBase: int
-    }
+      [<Column("unit_base")>]
+      UnitBase: int }

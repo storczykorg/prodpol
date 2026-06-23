@@ -25,10 +25,8 @@ type EmployeeCreate() =
 
     member val Password: string | null = null with get, set
 
-    member this.passwordNotEmpty(): bool =
-        this.Password
-        |> String.IsNullOrWhiteSpace
-        |> not
+    member this.passwordNotEmpty() : bool =
+        this.Password |> String.IsNullOrWhiteSpace |> not
 
     member this.BuildEmployee(id: int64, time: DateTime) : Employee =
         Employee(

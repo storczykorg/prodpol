@@ -32,8 +32,7 @@ module RegisterServiceExtensions =
     type IServiceCollection with
         member this.RegisterFromRuntime() =
             for assembly in System.AppDomain.CurrentDomain.GetAssemblies() do
-                for (service: Type, _attr: Attribute) in
-                    GroupMany (assembly.GetTypes()) (_.GetCustomAttributes()) do
+                for (service: Type, _attr: Attribute) in GroupMany (assembly.GetTypes()) (_.GetCustomAttributes()) do
                     match _attr with
                     | :? RegisterAsAttribute as attr ->
                         let descriptor = ServiceDescriptor(attr.TargetType, service, attr.Lifetime)
@@ -41,4 +40,5 @@ module RegisterServiceExtensions =
                         printfn $"Registered using {descriptor}"
 
                     | _ -> ()
+
             this

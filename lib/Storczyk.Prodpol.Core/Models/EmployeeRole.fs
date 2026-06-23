@@ -4,7 +4,7 @@ open System
 open LinqToDB.Mapping
 open Storczyk.Prodpol.Core.Utils
 
-[<Table("prodpol.employee_roles")>]
+[<Table(Name = "employee_roles", Schema = "prodpol")>]
 [<Serializable; ProdpolModel>]
 type EmployeeRole() =
     [<Column("role_id")>]
@@ -19,7 +19,7 @@ type EmployeeRole() =
 
     override this.ToString() = Json.readableJson this
 
-[<Table("prodpol.employee_roles")>]
+[<Table(Name = "employee_roles", Schema = "prodpol")>]
 [<Serializable; ProdpolModel>]
 type EmployeeRoleRead() =
     inherit EmployeeRole()

@@ -17,4 +17,13 @@ type EmployeeSignInManager
         schemes: IAuthenticationSchemeProvider,
         confirmation: IUserConfirmation<Employee>
     ) =
-    inherit SignInManager<Employee>(userManager, contextAccessor, claimsFactory, optionsAccessor, logger, schemes, confirmation)
+    inherit
+        SignInManager<Employee>(
+            userManager,
+            contextAccessor,
+            claimsFactory,
+            optionsAccessor,
+            logger,
+            schemes,
+            confirmation
+        )

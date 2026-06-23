@@ -9,38 +9,42 @@ open Storczyk.Prodpol.Core.Data
 
 [<Test>]
 let ``Task.wrap returns value on success`` () =
-    let r: int =
-        Task.wrapAsync (fun _ -> Task.FromResult 42) |> Async.RunSynchronously
+    let r: int = Task.wrapAsync (fun _ -> Task.FromResult 42) |> Async.RunSynchronously
     Assert.That(r, Is.EqualTo(42))
 
 [<Test>]
 let ``Task.wrap throws NotFoundException on null`` () =
-    Assert.Throws<NotFoundException>(Action(fun () ->
-        Task.wrapAsync (fun _ -> Task.FromResult<string>(null))
-        |> Async.RunSynchronously
-        |> ignore
-    )) |> ignore
+    Assert.Throws<NotFoundException>(
+        Action(fun () ->
+            Task.wrapAsync (fun _ -> Task.FromResult<string>(null))
+            |> Async.RunSynchronously
+            |> ignore)
+    )
+    |> ignore
 
 [<Test>]
 let ``Task.wrapOpt throws NotFoundException on None`` () =
-    Assert.Throws<NotFoundException>(Action(fun () ->
-        Task.wrapOpt (fun _ -> Task.FromResult(None: int option))
-        |> Async.RunSynchronously
-        |> ignore
-    )) |> ignore
+    Assert.Throws<NotFoundException>(
+        Action(fun () ->
+            Task.wrapOpt (fun _ -> Task.FromResult(None: int option))
+            |> Async.RunSynchronously
+            |> ignore)
+    )
+    |> ignore
 
 [<Test>]
 let ``Async.wrap returns value on success`` () =
-    let r: int =
-        Async.wrap (fun _ -> async { return 7 }) |> Async.RunSynchronously
+    let r: int = Async.wrap (fun _ -> async { return 7 }) |> Async.RunSynchronously
     Assert.That(r, Is.EqualTo(7))
 
 [<Test>]
 let ``Async.wrap lets exceptions propagate`` () =
-    Assert.Throws<TimeoutException>(Action(fun () ->
-        Async.wrap (fun _ -> async { do raise (TimeoutException()) })
-        |> Async.RunSynchronously
-    )) |> ignore
+    Assert.Throws<TimeoutException>(
+        Action(fun () ->
+            Async.wrap (fun _ -> async { do raise (TimeoutException()) })
+            |> Async.RunSynchronously)
+    )
+    |> ignore
 
 [<Test>]
 let ``toTaskFunc and toAsyncFunc convert ValueTask functions`` () =

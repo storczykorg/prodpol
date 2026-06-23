@@ -50,59 +50,66 @@ let mockSnowflakeGenerator (id: int64) =
 
 let mockEmployeeRepoAddAsync (result: Async<unit>) =
     let mock = Mock<IEmployeesRepository>()
-    mock
-        .Setup(fun m -> m.AddAsync(It.IsAny<Employee>()))
-        .Returns(fun (_: Employee) -> result)
+
+    mock.Setup(fun m -> m.AddAsync(It.IsAny<Employee>())).Returns(fun (_: Employee) -> result)
     |> ignore
+
     mock
 
 let mockEmployeeRepoUpdateAsync (result: Async<unit>) =
     let mock = Mock<IEmployeesRepository>()
+
     mock
         .Setup(fun m -> m.UpdateAsync(It.IsAny<int64>(), It.IsAny<Employee>()))
         .Returns(fun (_: int64, _: Employee) -> result)
     |> ignore
+
     mock
 
 let mockEmployeeRepoGetById (emp: Employee) =
     let mock = Mock<IEmployeesRepository>()
-    mock
-        .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return emp })
+
+    mock.Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>())).Returns(fun (_: int64) -> async { return emp })
     |> ignore
+
     mock
 
 let mockEmployeeRepoGetByIdNotFound () =
     let mock = Mock<IEmployeesRepository>()
+
     mock
         .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
         .Returns(fun (_: int64) -> async { return raise (NotFoundException "Resource not found.") })
     |> ignore
+
     mock
 
 let mockEmployeeReadRepoGetById (emp: EmployeeRead) =
     let mock = Mock<IEmployeesReadRepository>()
-    mock
-        .Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>()))
-        .Returns(fun (_: int64) -> async { return emp })
+
+    mock.Setup(fun m -> m.GetByIdAsync(It.IsAny<int64>())).Returns(fun (_: int64) -> async { return emp })
     |> ignore
+
     mock
 
 let mockPasswordHasher () =
     let mock = Mock<IPasswordHasher<Employee>>()
-    mock
-        .Setup(fun m -> m.HashPassword(It.IsAny<Employee>(), It.IsAny<string>()))
-        .Returns("hashed-password-test")
+
+    mock.Setup(fun m -> m.HashPassword(It.IsAny<Employee>(), It.IsAny<string>())).Returns("hashed-password-test")
     |> ignore
+
     mock
 
 let setupControllerValidation (controller: ControllerBase) =
     let validatorMock = Mock<IObjectModelValidator>()
-    validatorMock
-        .Setup(fun v -> v.Validate(
+
+    validatorMock.Setup(fun v ->
+        v.Validate(
             It.IsAny<ActionContext>(),
             It.IsAny<ValidationStateDictionary>(),
             It.IsAny<string>(),
-            It.IsAny<Object>()))
+            It.IsAny<Object>()
+        ))
     |> ignore
+
     controller.ObjectValidator <- validatorMock.Object

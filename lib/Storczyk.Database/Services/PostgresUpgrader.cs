@@ -6,6 +6,27 @@ using DbUp.Support;
 
 namespace Storczyk.Database.Services;
 
+internal class QuietUpgradeLog(ILogger logger) : IUpgradeLog
+{
+    public void LogInformation(string format, params object[] args) =>
+        logger.LogDebug(format, args);
+
+    public void LogTrace(string format, params object[] args) =>
+        logger.LogTrace(format, args);
+
+    public void LogDebug(string format, params object[] args) =>
+        logger.LogDebug(format, args);
+
+    public void LogWarning(string format, params object[] args) =>
+        logger.LogWarning(format, args);
+
+    public void LogError(string format, params object[] args) =>
+        logger.LogError(format, args);
+
+    public void LogError(Exception exception, string format, params object[] args) =>
+        logger.LogError(exception, format, args);
+}
+
 public class PostgresUpgrader(
     PostgresqlConnectionManager manager,
     ILogger<PostgresUpgrader> logger
@@ -13,6 +34,7 @@ public class PostgresUpgrader(
 {
     public virtual UpgradeEngine Build()
     {
+        var quietLog = new QuietUpgradeLog(logger);
         var builder = PostgresqlExtensions.PostgresqlDatabase(manager, "prodpol");
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
             path => path.Contains(".schemas."),
@@ -63,12 +85,12 @@ public class PostgresUpgrader(
 
         builder.WithScriptSorter(new DefaultScriptSorter());
 
-        builder.LogTo(logger);
+        builder.LogTo(quietLog);
         builder.WithTransaction();
 
         builder.JournalTo(new ProdpolTableJournal(
             () => manager,
-            () => new MicrosoftUpgradeLog(logger),
+            () => quietLog,
             "prodpol_meta",
             "migrations"
         ));
@@ -84,15 +106,22 @@ public class PostgresSeedUpgrader(
 {
     public virtual UpgradeEngine Build()
     {
+        var quietLog = new QuietUpgradeLog(logger);
         var builder = PostgresqlExtensions.PostgresqlDatabase(manager, "prodpol");
         builder.WithScriptsEmbeddedInAssembly(typeof(PostgresUpgraderExtensions).Assembly,
             path => path.Contains(".seed."),
-            new SqlScriptOptions { RunGroupOrder = 100, ScriptType = ScriptType.RunAlways });
+            new SqlScriptOptions { RunGroupOrder = 100 });
 
         builder.WithScriptSorter(new DefaultScriptSorter());
 
-        builder.LogTo(logger);
+        builder.LogTo(quietLog);
         builder.WithTransaction();
+        builder.JournalTo(new ProdpolTableJournal(
+            () => manager,
+            () => quietLog,
+            "prodpol_meta",
+            "seed_migrations"
+        ));
 
         return builder.Build();
     }
