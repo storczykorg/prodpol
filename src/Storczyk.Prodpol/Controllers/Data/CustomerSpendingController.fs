@@ -3,6 +3,7 @@ namespace Storczyk.Prodpol.Controllers.Data
 open System
 open System.Threading
 open System.Threading.Tasks
+open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
 open Storczyk.Async
@@ -14,6 +15,7 @@ open Storczyk.Prodpol.Dat.Forms
 open Storczyk.Prodpol.Data.Models
 open Storczyk.Prodpol.Utils
 
+[<Authorize>]
 [<ApiController>]
 [<Route("api/data/customer-spending/")>]
 type CustomerSpendingController(

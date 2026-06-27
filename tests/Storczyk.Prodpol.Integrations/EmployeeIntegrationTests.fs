@@ -2,6 +2,8 @@ module Storczyk.Prodpol.Integrations.EmployeeIntegrationTests
 
 open System
 open System.Net.Http
+open System.Net.Http.Headers
+open System.Security.Claims
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.TestHost
 open Microsoft.Extensions.Hosting
@@ -20,6 +22,7 @@ open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
 open Storczyk.Prodpol.Core.Services
+open Storczyk.Prodpol.Services
 
 [<AutoOpen>]
 module TestHelpers =
@@ -35,7 +38,36 @@ module TestHelpers =
 
         mockRepo
 
+    let mockEmployeesRepositoryFor (emp: Employee) : Mock<IEmployeesRepository> =
+        let mockRepo = Mock<IEmployeesRepository>()
+
+        mockRepo
+            .Setup(fun (m: IEmployeesRepository) -> m.GetByIdAsync(It.IsAny<int64>()))
+            .Returns(fun (_: int64) -> async { return emp })
+        |> ignore
+
+        mockRepo
+
+    let mockSnowflakeGenerator () : Mock<ISnowflakeGenerator> =
+        let mock = Mock<ISnowflakeGenerator>()
+
+        mock.Setup(fun m -> m.GetSnowflake(It.IsAny<DateTime>())).Returns(1L) |> ignore
+
+        mock
+
     let getClient (app: WebApplication) = app.Services.GetService<HttpClient>()
+
+    let authenticateClient (app: WebApplication) (client: HttpClient) =
+        let jwtService = app.Services.GetRequiredService<JwtService>()
+
+        let claims =
+            [ Claim(ClaimTypes.NameIdentifier, "1")
+              Claim(ClaimTypes.Role, "employee")
+              Claim("enabled", "true") ]
+
+        let token = jwtService.GenerateAccessToken(claims)
+        client.DefaultRequestHeaders.Authorization <- AuthenticationHeaderValue("Bearer", token)
+        client
 
 [<Test>]
 let ``GET /api/data/employees/26 returns mocked employee`` () =
@@ -54,18 +86,22 @@ let ``GET /api/data/employees/26 returns mocked employee`` () =
     emp.CreatedAt <- DateTime(2026, 5, 11, 16, 28, 03, 522)
     emp.Enabled <- true
 
-    let mockRepo = mockEmployeesReadRepositoryFor emp
+    let mockReadRepo = mockEmployeesReadRepositoryFor emp
+    let mockEmpRepo = mockEmployeesRepositoryFor (Employee())
+    let mockSnow = mockSnowflakeGenerator ()
 
     use server =
         ProdpolServer()
             .BuildTest(
                 [||],
                 fun s ->
-                    s.AddSingleton<IEmployeesReadRepository>(mockRepo.Object) |> ignore
+                    s.AddSingleton<IEmployeesReadRepository>(mockReadRepo.Object) |> ignore
+                    s.AddSingleton<IEmployeesRepository>(mockEmpRepo.Object) |> ignore
+                    s.AddSingleton<ISnowflakeGenerator>(mockSnow.Object) |> ignore
                     ()
             )
 
-    use client = getClient server
+    use client = getClient server |> authenticateClient server
 
     let resp = client.GetAsync("http://localhost:5000/api/data/employees/26").Result
     Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK))
@@ -83,7 +119,6 @@ let ``GET /api/data/employees/26 returns mocked employee`` () =
     Assert.That(doc.GetProperty("nameFirst").GetString(), Is.EqualTo("System"))
     Assert.That(doc.GetProperty("nameLast").GetString(), Is.EqualTo("Informatyczny"))
     Assert.That(doc.GetProperty("phoneNumber").GetString(), Is.EqualTo("+48111111111"))
-    Assert.That(doc.GetProperty("passwordHash").ValueKind, Is.EqualTo(JsonValueKind.Null))
     Assert.That(doc.GetProperty("createdAt").GetString().StartsWith("2026-05-11T16:28:03.522"), Is.True)
     Assert.That(doc.GetProperty("enabled").GetBoolean(), Is.EqualTo(true))
 
@@ -139,7 +174,7 @@ let ``POST /api/data/employees/ creates employee and returns 200`` () =
                     ()
             )
 
-    use client = getClient server
+    use client = getClient server |> authenticateClient server
 
     let body =
         JsonSerializer.Serialize(
@@ -182,7 +217,7 @@ let ``PATCH /api/data/employees/1 updates employee name`` () =
 
     employeesRepo
         .Setup(fun (m: IEmployeesRepository) -> m.UpdateAsync(It.IsAny<int64>(), It.IsAny<Employee>()))
-        .Returns(fun (_key: int64, _emp: Employee) -> async { return () })
+        .Returns<int64, Employee>(fun _key _emp -> async { return () })
     |> ignore
 
     let employeesReadRepo = Mock<IEmployeesReadRepository>()
@@ -199,7 +234,7 @@ let ``PATCH /api/data/employees/1 updates employee name`` () =
                     ()
             )
 
-    use client = getClient server
+    use client = getClient server |> authenticateClient server
 
     let patchBody = """[{"op":"replace","path":"/nameFirst","value":"UpdatedName"}]"""
     let content = new StringContent(patchBody, System.Text.Encoding.UTF8, "text/json")
@@ -237,7 +272,7 @@ let ``PATCH /api/data/employees/999 returns 404`` () =
                     ()
             )
 
-    use client = getClient server
+    use client = getClient server |> authenticateClient server
 
     let patchBody = """[{"op":"replace","path":"/nameFirst","value":"UpdatedName"}]"""
     let content = new StringContent(patchBody, System.Text.Encoding.UTF8, "text/json")

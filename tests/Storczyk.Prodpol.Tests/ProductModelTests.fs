@@ -54,16 +54,36 @@ let ``ProductRead option fields default to None`` () =
 [<Test>]
 let ``ProductRead equality works`` () =
     let now = DateTime.UtcNow
+
     let a: ProductRead =
-        { Id = 1L; Name = "X"; CreatedAt = now; CreatedBy = 1L
-          LastModifiedBy = 1L; LastModifiedAt = now; Price = 5m
-          UnitType = 1; AvailableAmount = 10; UnitBase = 1
-          LowestPrice = None; LowestPriceTo = None; LowestPriceFrom = None }
+        { Id = 1L
+          Name = "X"
+          CreatedAt = now
+          CreatedBy = 1L
+          LastModifiedBy = 1L
+          LastModifiedAt = now
+          Price = 5m
+          UnitType = 1
+          AvailableAmount = 10
+          UnitBase = 1
+          LowestPrice = None
+          LowestPriceTo = None
+          LowestPriceFrom = None }
+
     let b: ProductRead =
-        { Id = 1L; Name = "X"; CreatedAt = now; CreatedBy = 1L
-          LastModifiedBy = 1L; LastModifiedAt = now; Price = 5m
-          UnitType = 1; AvailableAmount = 10; UnitBase = 1
-          LowestPrice = None; LowestPriceTo = None; LowestPriceFrom = None }
+        { Id = 1L
+          Name = "X"
+          CreatedAt = now
+          CreatedBy = 1L
+          LastModifiedBy = 1L
+          LastModifiedAt = now
+          Price = 5m
+          UnitType = 1
+          AvailableAmount = 10
+          UnitBase = 1
+          LowestPrice = None
+          LowestPriceTo = None
+          LowestPriceFrom = None }
 
     Assert.That(a, Is.EqualTo(b))
 
@@ -79,8 +99,7 @@ let ``ProductOrderKeys GetSqlName returns correct column names`` () =
 let ``ProductOrderKeys GetSqlName throws on unknown value`` () =
     let unknown = enum<ProductOrderKeys> (99)
 
-    Assert.Throws<System.ArgumentException>(
-        Action(fun () -> ProductUtilHelpers.GetSqlName unknown |> ignore))
+    Assert.Throws<System.ArgumentException>(Action(fun () -> ProductUtilHelpers.GetSqlName unknown |> ignore))
     |> ignore
 
 [<Test>]
@@ -97,7 +116,16 @@ let ``ProductSearchOption has expected defaults`` () =
 
 [<Test>]
 let ``ProductSearchOption properties are settable`` () =
-    let opt = ProductSearchOption(name = Some "widget", priceMin = Some 10m, priceMax = Some 50m, unitType = Some 1, limit = 10, skip = 5, asc = true)
+    let opt =
+        ProductSearchOption(
+            name = Some "widget",
+            priceMin = Some 10m,
+            priceMax = Some 50m,
+            unitType = Some 1,
+            limit = 10,
+            skip = 5,
+            asc = true
+        )
 
     Assert.That(opt.name, Is.EqualTo(Some "widget"))
     Assert.That(opt.priceMin, Is.EqualTo(Some 10m))

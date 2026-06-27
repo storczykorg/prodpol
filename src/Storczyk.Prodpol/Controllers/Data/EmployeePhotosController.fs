@@ -1,6 +1,7 @@
 ﻿namespace Storczyk.Prodpol.Controllers.Data
 
 open System.Runtime.InteropServices
+open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.JsonPatch.SystemTextJson
 open Microsoft.AspNetCore.Mvc
@@ -12,6 +13,7 @@ open Storczyk.Prodpol.Core.Services
 open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Utils
 
+[<Authorize>]
 [<ApiController>]
 [<Route("api/data/employees/photos/")>]
 type EmployeePhotosController(photos: IRepository<int64, EmployeePhoto>,

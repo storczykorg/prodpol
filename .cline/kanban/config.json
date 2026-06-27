@@ -1,9 +1,0 @@
-{
-  "shortcuts": [
-    {
-      "label": "Test",
-      "command": "dotnet test",
-      "icon": "play"
-    }
-  ]
-}

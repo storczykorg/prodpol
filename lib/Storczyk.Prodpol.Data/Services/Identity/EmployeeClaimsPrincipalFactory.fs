@@ -21,6 +21,8 @@ type EmployeeClaimsPrincipalFactory
             identity.AddClaim(Claim(ClaimTypes.Surname, user.NameLast))
             identity.AddClaim(Claim(ClaimTypes.Email, user.Email))
             identity.AddClaim(Claim("enabled", user.Enabled.ToString()))
+            identity.AddClaim(Claim(ClaimTypes.Role, "employee"))
+            identity.AddClaim(Claim(ClaimTypes.NameIdentifier, user.Id.ToString()))
 
             user.RoleId
             |> Option.iter (fun rid -> identity.AddClaim(Claim("employee_role_id", rid.ToString())))

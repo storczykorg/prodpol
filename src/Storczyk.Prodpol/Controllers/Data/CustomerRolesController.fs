@@ -1,4 +1,4 @@
-﻿namespace Storczyk.Prodpol.Controllers.Data
+namespace Storczyk.Prodpol.Controllers.Data
 
 open System.Threading
 open System.Threading.Tasks
@@ -13,10 +13,8 @@ open Storczyk.Prodpol.Utils
 
 [<Authorize>]
 [<ApiController>]
-[<Route("api/data/employees/roles/")>]
-type EmployeesRolesController
-    (readRoles: IEmployeeRoleReadRepository, roles: IEmployeeRoleRepository, logger: ILogger<EmployeesRolesController>)
-    =
+[<Route("api/data/customers/roles/")>]
+type CustomersRolesController(roles: ICustomerRoleRepository, logger: ILogger<CustomersRolesController>) =
     inherit LoggedController()
     override this.Logger = logger
 
@@ -25,10 +23,11 @@ type EmployeesRolesController
     member this.GetCount(token: CancellationToken) =
         roles.CountAsync(token) |> this.mapAsyncResult
 
-    [<HttpGet; Route("all")>]
-    [<ProducesResponseType(typeof<EmployeeRoleRead[]>, 200)>]
+    [<HttpGet>]
+    [<Route("all")>]
+    [<ProducesResponseType(typeof<CustomerRole[]>, 200)>]
     member this.GetAll(token: CancellationToken) =
-        async { return! readRoles.GetAllAsync(token) } |> this.mapAsyncResult
+        async { return! roles.GetAllAsync(token) } |> this.mapAsyncResult
 
     [<HttpGet>]
     [<Route("{id:long}")>]
@@ -37,13 +36,13 @@ type EmployeesRolesController
 
     [<HttpPatch>]
     [<Route("{id:long}")>]
-    member this.Update(id: string, [<FromBody>] update: JsonPatchDocument<EmployeeRole>) : Task<ActionResult> =
+    member this.Update(id: string, [<FromBody>] update: JsonPatchDocument<CustomerRole>) : Task<ActionResult> =
         async {
-            let! emp = roles.GetByIdAsync(id)
-            update.ApplyTo emp
-            this.ValidateObject emp |> ignore
-            do! roles.UpdateAsync(id, emp)
-            return emp
+            let! role = roles.GetByIdAsync(id)
+            update.ApplyTo role
+            this.ValidateObject role |> ignore
+            do! roles.UpdateAsync(id, role)
+            return role
         }
         |> this.mapAsyncResult
 
@@ -53,5 +52,5 @@ type EmployeesRolesController
         roles.DeleteAsync(id) |> this.mapAsyncResult
 
     [<HttpPost>]
-    member this.Create([<FromBody>] entity: EmployeeRole) =
+    member this.Create([<FromBody>] entity: CustomerRole) =
         async { return this.ValidateObject entity } |> this.mapAsyncResult

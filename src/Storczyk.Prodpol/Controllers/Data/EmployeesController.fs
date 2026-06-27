@@ -22,6 +22,7 @@ open Storczyk.Prodpol.Core.Utils
 open Storczyk.Prodpol.Dat.Forms
 open Storczyk.Prodpol.Utils
 
+[<Authorize>]
 [<ApiController>]
 [<Route("api/data/employees/")>]
 type EmployeesController

@@ -1,4 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["AGENTS.md", "GEMINI.md"]
+  "instructions": ["AGENTS.md", "GEMINI.md"],
+  "lsp": {
+    "fantomas": {
+      "command": ["dotnet", "fantomas", "--daemon"],
+      "extensions": [".fs", ".fsx", ".fsi"]
+    }
+  }
 }

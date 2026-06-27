@@ -486,6 +486,20 @@ dist
 node_modules
 .vscode
 .git
-.junie
-.agents
-.temp
+
+# AI & tooling config
+AGENTS.md
+GEMINI.md
+opencode.json
+.cline/
+.gemini/
+.junie/
+.user/
+.agents/
+.github/agents/
+
+# Project collateral (not source code)
+spec/
+docs/
+tools/
+temp/

@@ -23,13 +23,27 @@ type FSharpOptionModelBinder() =
                     bindingContext.Result <- ModelBindingResult.Success(None)
                     Task.CompletedTask
                 else
-                    // Wyciągnięcie wewnętrznego typu z Option<'T> (np. string z string option)
                     let innerType = bindingContext.ModelType.GetGenericArguments().[0]
 
                     try
-                        // Próba konwersji tekstu na docelowy typ wewnętrzny
-                        let convertedValue = Convert.ChangeType(rawValue, innerType)
-                        // Utworzenie Some(wartość)
+                        let convertedValue =
+                            if innerType.IsArray then
+                                let elementType = innerType.GetElementType()
+                                let allValues =
+                                    valueProviderResult.Values
+                                    |> Seq.collect (fun v ->
+                                        if isNull v then Seq.empty
+                                        else v.Split(',') |> Seq.map (fun s -> s.Trim()))
+                                    |> Seq.filter (not << String.IsNullOrEmpty)
+                                    |> Seq.toArray
+                                let typedArray = Array.CreateInstance(elementType, allValues.Length)
+                                allValues
+                                |> Array.iteri (fun i v ->
+                                    typedArray.SetValue(Convert.ChangeType(v, elementType), i))
+                                box typedArray
+                            else
+                                Convert.ChangeType(rawValue, innerType)
+
                         let someValue =
                             FSharpValue.MakeUnion(
                                 FSharpType.GetUnionCases(bindingContext.ModelType).[1],

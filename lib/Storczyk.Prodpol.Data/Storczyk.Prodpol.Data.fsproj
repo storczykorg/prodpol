@@ -32,6 +32,9 @@
       <Compile Include="Services\Identity\EmployeeSignInManager.fs" />
       <Compile Include="Services\Identity\EmployeeClaimsPrincipalFactory.fs" />
       <Compile Include="Services\Identity\LoggingEmailSender.fs" />
+      <Compile Include="Services\Catalog\ProductDatabase.fs" />
+      <Compile Include="Services\Catalog\PgProductRepository.fs" />
+      <Compile Include="Services\Catalog\PgProductSearchRepository.fs" />
       <Compile Include="Services\Catalog\ProductsRepository.fs" />
       <Compile Include="Services\Reports\PgCustomerSpendingReadRepository.fs" />
       <Compile Include="Services\ProdpolTimeProvider.fs" />

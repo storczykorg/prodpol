@@ -3,6 +3,7 @@ namespace Storczyk.Prodpol
 open System
 open System.Text
 open System.Threading.Tasks
+open Microsoft.AspNetCore.Authentication
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Identity
@@ -12,12 +13,19 @@ open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
+open System.Security.Claims
 open Npgsql
 open Storczyk.Prodpol.Core.Data
 open Storczyk.Prodpol.Core.Models
+open Storczyk.Prodpol.Data.Services.Identity
 open Storczyk.Prodpol.ServiceSetup
+open Storczyk.Prodpol.Services
 
 type AdminPasswordResetTokenRequest = { Email: string }
+
+[<AutoOpen>]
+module ServerHelper =
+    let inline withObj (receiver: 'T) ([<InlineIfLambda>] block: 'T -> 'U) : 'U = block receiver
 
 type ProdpolServer() =
     member this.Configure(builder: IHostApplicationBuilder) : IHostApplicationBuilder =
@@ -25,9 +33,19 @@ type ProdpolServer() =
 
         this.ConfigureServices(builder.Services)
 
+        builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"))
+        |> ignore
+
+        builder.Services.AddSingleton<JwtService>() |> ignore
+
         let enumMappings (dataSource: NpgsqlDataSourceBuilder) =
             dataSource.MapEnum<EmployeeOrderKeys>("prodpol.employee_ordering_keys")
             |> ignore
+
+            dataSource.MapEnum<CustomerOrderKeys>("prodpol.customer_ordering_keys")
+            |> ignore
+
+            dataSource.MapEnum<ProductOrderKeys>("prodpol.product_ordering_keys") |> ignore
 
             dataSource.ConnectionStringBuilder.MaxAutoPrepare <- 100
             dataSource.ConnectionStringBuilder.MinPoolSize <- 8
@@ -52,51 +70,126 @@ type ProdpolServer() =
         if app.Environment.IsDevelopment() then
             app.MapOpenApi("/openapi/{documentName}.yaml") |> ignore
 
-        app.MapGroup("/api/employee/auth").MapIdentityApi<Employee>() |> ignore
+        withObj (app.MapGroup("/api/employee/auth")) (fun group ->
+            group.MapIdentityApi<Employee>() |> ignore
 
-        app.MapPost(
-            "/api/employee/auth/admin/reset-password-token",
-            Func<AdminPasswordResetTokenRequest, HttpContext, Task<IResult>>(fun req context ->
-                task {
-                    let userManager =
-                        context.RequestServices.GetRequiredService<UserManager<Employee>>()
-
-                    let logger = context.RequestServices.GetRequiredService<ILogger<ProdpolServer>>()
-                    let! user = userManager.FindByEmailAsync(req.Email)
-
-                    match box user with
-                    | null -> return Results.Ok()
-                    | _ ->
-                        let! token = userManager.GeneratePasswordResetTokenAsync(user)
-                        let encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token))
-                        logger.LogInformation("Admin password reset token for {Email}: {Token}", req.Email, encoded)
+            group.MapPost(
+                "logout",
+                Func<HttpContext, Task<IResult>>(fun (ctx) ->
+                    task {
+                        do! ctx.SignOutAsync()
                         return Results.Ok()
-                })
-        )
-        |> ignore
+                    })
+            )
+            |> ignore
 
-        app.MapGet(
-            "/api/employee/auth/me",
-            Func<HttpContext, Task<IResult>>(fun context ->
-                task {
-                    let userManager =
-                        context.RequestServices.GetRequiredService<UserManager<Employee>>()
+            group.WithTags("Authentication") |> ignore
 
-                    let employeesRead =
-                        context.RequestServices.GetRequiredService<IEmployeesReadRepository>()
+            group.MapGet(
+                "me",
+                Func<HttpContext, Task<IResult>>(fun context ->
+                    task {
+                        let userManager =
+                            context.RequestServices.GetRequiredService<UserManager<Employee>>()
 
-                    let userIdStr = userManager.GetUserId(context.User)
+                        let employeesRead =
+                            context.RequestServices.GetRequiredService<IEmployeesReadRepository>()
 
-                    if String.IsNullOrEmpty(userIdStr) then
-                        return Results.Unauthorized()
-                    else
-                        let userId = Int64.Parse(userIdStr)
-                        let! employee = employeesRead.GetByIdAsync(userId)
-                        return Results.Ok(employee)
-                })
-        )
-        |> ignore
+                        let userIdStr = userManager.GetUserId(context.User)
 
+                        if String.IsNullOrEmpty(userIdStr) then
+                            return Results.Unauthorized()
+                        else
+                            let userId = Int64.Parse(userIdStr)
+                            let! employee = employeesRead.GetByIdAsync(userId)
+                            return Results.Ok(employee)
+                    })
+            )
+            |> ignore
+
+            group.MapPost(
+                "jwt-login",
+                Func<JwtLoginRequest, HttpContext, Task<IResult>>(fun req ctx ->
+                    task {
+                        let userManager = ctx.RequestServices.GetRequiredService<UserManager<Employee>>()
+
+                        let signInManager = ctx.RequestServices.GetRequiredService<EmployeeSignInManager>()
+
+                        let jwtService = ctx.RequestServices.GetRequiredService<JwtService>()
+
+                        let! user = userManager.FindByEmailAsync(req.Email)
+
+                        if isNull (box user) then
+                            return Results.Unauthorized()
+                        else
+                            let! valid = userManager.CheckPasswordAsync(user, req.Password)
+
+                            if not valid then
+                                return Results.Unauthorized()
+                            else
+                                let claims =
+                                    [ Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+                                      Claim(ClaimTypes.Email, user.Email)
+                                      Claim(ClaimTypes.GivenName, user.NameFirst)
+                                      Claim(ClaimTypes.Surname, user.NameLast)
+                                      Claim(ClaimTypes.Role, "employee")
+                                      Claim("enabled", user.Enabled.ToString()) ]
+
+                                let accessToken = jwtService.GenerateAccessToken(claims)
+                                let refreshToken = jwtService.GenerateRefreshToken(user.Id)
+
+                                return
+                                    Results.Ok(
+                                        { AccessToken = accessToken
+                                          RefreshToken = refreshToken
+                                          ExpiresIn = 900.0 }
+                                    )
+                    })
+            )
+            |> ignore
+
+            group.MapPost(
+                "jwt-refresh",
+                Func<JwtRefreshRequest, HttpContext, Task<IResult>>(fun req ctx ->
+                    task {
+                        let userManager = ctx.RequestServices.GetRequiredService<UserManager<Employee>>()
+
+                        let jwtService = ctx.RequestServices.GetRequiredService<JwtService>()
+
+                        match jwtService.TryValidateRefreshToken(req.RefreshToken) with
+                        | None -> return Results.Unauthorized()
+                        | Some userId ->
+                            let! user = userManager.FindByIdAsync(userId.ToString())
+
+                            if isNull (box user) then
+                                return Results.Unauthorized()
+                            else
+                                let claims =
+                                    [ Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+                                      Claim(ClaimTypes.Email, user.Email)
+                                      Claim(ClaimTypes.GivenName, user.NameFirst)
+                                      Claim(ClaimTypes.Surname, user.NameLast)
+                                      Claim(ClaimTypes.Role, "employee")
+                                      Claim("enabled", user.Enabled.ToString()) ]
+
+                                let accessToken = jwtService.GenerateAccessToken(claims)
+                                let refreshToken = jwtService.GenerateRefreshToken(user.Id)
+
+                                return
+                                    Results.Ok(
+                                        { AccessToken = accessToken
+                                          RefreshToken = refreshToken
+                                          ExpiresIn = 900.0 }
+                                    )
+                    })
+            )
+            |> ignore
+
+            ())
+
+
+
+        app.UseAuthentication() |> ignore
         app.UseAuthorization() |> ignore
         app.MapControllers() |> ignore
 

@@ -68,11 +68,22 @@ let ``CustomerRead can be constructed with all fields including generated column
 [<Test>]
 let ``CustomerRead equality works`` () =
     let a: CustomerRead =
-        { Id = 1L; Email = "a@b.com"; NormalizedEmail = "a@b.com"
-          PhoneNumber = None; PasswordHash = None; EmailConfirmed = false
-          Role = None; NameFirst = None; NameLast = None; CompanyName = None
-          FullName = ""; NormalizedName = ""; RoleId = None
-          RoleDisplayName = None; RoleName = None }
+        { Id = 1L
+          Email = "a@b.com"
+          NormalizedEmail = "a@b.com"
+          PhoneNumber = None
+          PasswordHash = None
+          EmailConfirmed = false
+          Role = None
+          NameFirst = None
+          NameLast = None
+          CompanyName = None
+          FullName = ""
+          NormalizedName = ""
+          RoleId = None
+          RoleDisplayName = None
+          RoleName = None }
+
     let b: CustomerRead = a
 
     Assert.That(a, Is.EqualTo(b))
@@ -80,7 +91,9 @@ let ``CustomerRead equality works`` () =
 [<Test>]
 let ``CustomerRole can be constructed`` () =
     let r: CustomerRole =
-        { Id = 1; DisplayName = "Standard Customer"; RoleName = "standard" }
+        { Id = 1
+          DisplayName = "Standard Customer"
+          RoleName = "standard" }
 
     Assert.That(r.Id, Is.EqualTo(1))
     Assert.That(r.DisplayName, Is.EqualTo("Standard Customer"))
@@ -97,13 +110,13 @@ let ``CustomerOrderKeys GetSqlName returns correct column names`` () =
 let ``CustomerOrderKeys GetSqlName throws on unknown value`` () =
     let unknown = enum<CustomerOrderKeys> (99)
 
-    Assert.Throws<System.ArgumentException>(
-        Action(fun () -> CustomerUtilHelpers.GetSqlName unknown |> ignore))
+    Assert.Throws<System.ArgumentException>(Action(fun () -> CustomerUtilHelpers.GetSqlName unknown |> ignore))
     |> ignore
 
 [<Test>]
 let ``CustomerSearchOption inherits PersonSearchOption properties`` () =
-    let opt = CustomerSearchOption(fullName = Some "Jane", email = Some "j@b.com", limit = 5, asc = true)
+    let opt =
+        CustomerSearchOption(fullName = Some "Jane", email = Some "j@b.com", limit = 5, asc = true)
 
     Assert.That(opt.fullName, Is.EqualTo(Some "Jane"))
     Assert.That(opt.email, Is.EqualTo(Some "j@b.com"))

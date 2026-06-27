@@ -31,6 +31,9 @@ type IEmployeeRoleReadRepository =
 type ICustomerSpendingReadRepository =
     inherit IReadRepository<int64, CustomerSpending>
 
+type IProductRepository =
+    inherit IRepository<int64, Product>
+
 type IProductReadRepository =
     inherit IReadRepository<int64, ProductRead>
 

@@ -196,7 +196,8 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                             phone_number = @phoneNumber,
                             password_hash = @passwordHash,
                             security_stamp = @securityStamp,
-                            email_confirmed = @emailConfirmed
+                            email_confirmed = @emailConfirmed,
+                            role_id = @roleId
                         WHERE employee_id = @oldId;",
                         {| oldId = key
                            newKey = entity.Id
@@ -206,7 +207,8 @@ type PgEmployeeRepository(dataSource: NpgsqlDataSource) =
                            phoneNumber = entity.PhoneNumber
                            passwordHash = entity.PasswordHash |> Option.defaultValue null
                            securityStamp = entity.SecurityStamp |> Option.defaultValue null
-                           emailConfirmed = entity.EmailConfirmed |}
+                           emailConfirmed = entity.EmailConfirmed
+                           roleId = entity.RoleId |> Option.toNullable |}
                     ))
                 with
                 | 0 ->

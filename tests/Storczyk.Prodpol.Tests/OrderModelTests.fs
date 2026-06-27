@@ -7,7 +7,9 @@ open Storczyk.Prodpol.Core.Models
 [<Test>]
 let ``OrderTotalDetails can be constructed`` () =
     let d: OrderTotalDetails =
-        { Total = 100m; DeliveryFee = 15m; ItemsTotal = 85m }
+        { Total = 100m
+          DeliveryFee = 15m
+          ItemsTotal = 85m }
 
     Assert.That(d.Total, Is.EqualTo(100m))
     Assert.That(d.DeliveryFee, Is.EqualTo(15m))
@@ -23,7 +25,10 @@ let ``Order can be constructed with all fields`` () =
           CreatedAt = now
           EmployeeId = 5L
           DeliveryMethod = 2
-          Total = { Total = 120m; DeliveryFee = 10m; ItemsTotal = 110m }
+          Total =
+            { Total = 120m
+              DeliveryFee = 10m
+              ItemsTotal = 110m }
           CurrentState = 3 }
 
     Assert.That(o.Id, Is.EqualTo(1L))
@@ -34,10 +39,19 @@ let ``Order can be constructed with all fields`` () =
 [<Test>]
 let ``Order equality works`` () =
     let now = DateTime.UtcNow
+
     let a: Order =
-        { Id = 1L; CustomerId = 10L; CreatedAt = now; EmployeeId = 5L
-          DeliveryMethod = 2; Total = { Total = 100m; DeliveryFee = 10m; ItemsTotal = 90m }
+        { Id = 1L
+          CustomerId = 10L
+          CreatedAt = now
+          EmployeeId = 5L
+          DeliveryMethod = 2
+          Total =
+            { Total = 100m
+              DeliveryFee = 10m
+              ItemsTotal = 90m }
           CurrentState = 1 }
+
     let b: Order = a
 
     Assert.That(a, Is.EqualTo(b))
@@ -52,7 +66,10 @@ let ``OrderRead includes state display fields`` () =
           CreatedAt = now
           EmployeeId = 5L
           DeliveryMethod = 2
-          Total = { Total = 120m; DeliveryFee = 10m; ItemsTotal = 110m }
+          Total =
+            { Total = 120m
+              DeliveryFee = 10m
+              ItemsTotal = 110m }
           CurrentState = 3
           StateDisplayName = "Shipped"
           StateName = "shipped" }
@@ -83,9 +100,18 @@ let ``OrderDetails can be constructed with all fields`` () =
 [<Test>]
 let ``OrderDetails required fields work`` () =
     let d: OrderDetails =
-        { OrderId = 2L; FirstName = None; LastName = None; CompanyName = None
-          NipCode = None; City = "Krakow"; Street = None; ZipCode = "30-001"
-          StreetNo = "5"; FlatNo = None; SpecialInfo = None; PhoneNumber = None }
+        { OrderId = 2L
+          FirstName = None
+          LastName = None
+          CompanyName = None
+          NipCode = None
+          City = "Krakow"
+          Street = None
+          ZipCode = "30-001"
+          StreetNo = "5"
+          FlatNo = None
+          SpecialInfo = None
+          PhoneNumber = None }
 
     Assert.That(d.City, Is.EqualTo("Krakow"))
     Assert.That(d.FirstName, Is.EqualTo(None))
@@ -108,8 +134,13 @@ let ``OrderProduct can be constructed`` () =
 [<Test>]
 let ``OrderProduct CustomerNotes defaults to None`` () =
     let p: OrderProduct =
-        { OrderProductId = 2L; OrderId = 10L; TotalCost = 30m
-          Amount = 1; Cost = 30m; ProductId = 101L; CustomerNotes = None }
+        { OrderProductId = 2L
+          OrderId = 10L
+          TotalCost = 30m
+          Amount = 1
+          Cost = 30m
+          ProductId = 101L
+          CustomerNotes = None }
 
     Assert.That(p.CustomerNotes, Is.EqualTo(None))
 
@@ -125,8 +156,7 @@ let ``OrderOrderKeys GetSqlName returns correct column names`` () =
 let ``OrderOrderKeys GetSqlName throws on unknown value`` () =
     let unknown = enum<OrderOrderKeys> (99)
 
-    Assert.Throws<System.ArgumentException>(
-        Action(fun () -> OrderUtilHelpers.GetSqlName unknown |> ignore))
+    Assert.Throws<System.ArgumentException>(Action(fun () -> OrderUtilHelpers.GetSqlName unknown |> ignore))
     |> ignore
 
 [<Test>]
@@ -154,7 +184,8 @@ let ``OrderSearchOption properties are settable`` () =
             createdTo = Some now,
             stateNames = Some [| "shipped" |],
             limit = 5,
-            asc = true)
+            asc = true
+        )
 
     Assert.That(opt.employeeIds, Is.EqualTo(Some [| 1L; 2L |]))
     Assert.That(opt.customerIds, Is.EqualTo(Some [| 10L |]))
